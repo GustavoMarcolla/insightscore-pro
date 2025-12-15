@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Mail, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Mail, Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface SendFeedbackDialogProps {
   open: boolean;
@@ -24,10 +25,30 @@ interface SendFeedbackDialogProps {
 
 export function SendFeedbackDialog({ open, onOpenChange, fornecedor }: SendFeedbackDialogProps) {
   const [isSending, setIsSending] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasContacts, setHasContacts] = useState<boolean | null>(null);
   const { toast } = useToast();
 
+  // Check if supplier has contacts when dialog opens
+  useEffect(() => {
+    if (open && fornecedor) {
+      setIsLoading(true);
+      setHasContacts(null);
+      
+      supabase
+        .from("fornecedor_contatos")
+        .select("id, email")
+        .eq("fornecedor_id", fornecedor.id)
+        .not("email", "is", null)
+        .then(({ data }) => {
+          setHasContacts(data && data.length > 0);
+          setIsLoading(false);
+        });
+    }
+  }, [open, fornecedor]);
+
   const handleSend = async () => {
-    if (!fornecedor) return;
+    if (!fornecedor || !hasContacts) return;
 
     setIsSending(true);
     try {
@@ -49,17 +70,10 @@ export function SendFeedbackDialog({ open, onOpenChange, fornecedor }: SendFeedb
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error sending feedback:", error);
-      
-      const errorMessage = error.message || "Não foi possível enviar o email.";
-      const isNoContactError = errorMessage.toLowerCase().includes("contato") || 
-                               errorMessage.toLowerCase().includes("email");
-      
       toast({
         variant: "destructive",
-        title: isNoContactError ? "Fornecedor sem contatos" : "Erro ao enviar feedback",
-        description: isNoContactError 
-          ? "Este fornecedor não possui contatos com email cadastrado. Cadastre um contato com email na página de detalhes do fornecedor."
-          : errorMessage,
+        title: "Erro ao enviar feedback",
+        description: "Não foi possível enviar o email. Tente novamente.",
       });
     } finally {
       setIsSending(false);
@@ -87,15 +101,29 @@ export function SendFeedbackDialog({ open, onOpenChange, fornecedor }: SendFeedb
               <p className="text-sm text-muted-foreground">{fornecedor.codigo}</p>
             </div>
 
-            <div className="text-sm text-muted-foreground space-y-2">
-              <p>O email incluirá:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>Qualificações do último mês</li>
-                <li>Score geral do fornecedor</li>
-                <li>Critérios com menor pontuação</li>
-                <li>Sugestões de melhoria geradas por IA</li>
-              </ul>
-            </div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : hasContacts === false ? (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  Este fornecedor não possui contatos com email cadastrado. 
+                  Cadastre um contato na aba "Contatos" antes de enviar o feedback.
+                </AlertDescription>
+              </Alert>
+            ) : (
+              <div className="text-sm text-muted-foreground space-y-2">
+                <p>O email incluirá:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Qualificações do último mês</li>
+                  <li>Score geral do fornecedor</li>
+                  <li>Critérios com menor pontuação</li>
+                  <li>Sugestões de melhoria geradas por IA</li>
+                </ul>
+              </div>
+            )}
           </div>
         )}
 
@@ -103,7 +131,7 @@ export function SendFeedbackDialog({ open, onOpenChange, fornecedor }: SendFeedb
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSending}>
             Cancelar
           </Button>
-          <Button onClick={handleSend} disabled={isSending}>
+          <Button onClick={handleSend} disabled={isSending || isLoading || !hasContacts}>
             {isSending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />

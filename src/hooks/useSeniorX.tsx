@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 // Constantes
 const SENIOR_X_ORIGINS = [
@@ -34,19 +35,6 @@ export interface SeniorUser {
   tenantDomain: string;
 }
 
-// Interface do payload de autenticação
-interface SeniorXAuthPayload {
-  token?: {
-    access_token?: string;
-    username?: string;
-    fullName?: string;
-    email?: string;
-    tenantName?: string;
-    locale?: string;
-  };
-  servicesUrl?: string;
-}
-
 /**
  * Normaliza o username removendo a parte @tenant
  */
@@ -65,6 +53,45 @@ function normalizeFullName(fullName: string): string {
 }
 
 /**
+ * Sincroniza o usuário SeniorX com o Supabase (cria se não existir e faz login)
+ */
+async function syncSeniorUserWithSupabase(email: string, fullName: string, seniorUserId: string): Promise<boolean> {
+  try {
+    console.log('[SeniorX] Sincronizando usuário com Supabase:', email);
+    
+    const { data, error } = await supabase.functions.invoke('sync-seniorx-user', {
+      body: { email, fullName, seniorUserId }
+    });
+
+    if (error) {
+      console.error('[SeniorX] Erro ao sincronizar usuário:', error);
+      return false;
+    }
+
+    if (data?.token_hash) {
+      // Usa o token_hash para fazer login no Supabase
+      const { error: verifyError } = await supabase.auth.verifyOtp({
+        token_hash: data.token_hash,
+        type: 'magiclink',
+      });
+
+      if (verifyError) {
+        console.error('[SeniorX] Erro ao verificar OTP:', verifyError);
+        return false;
+      }
+
+      console.log('[SeniorX] Login no Supabase realizado com sucesso');
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    console.error('[SeniorX] Erro ao sincronizar usuário:', error);
+    return false;
+  }
+}
+
+/**
  * Hook para autenticação via Senior X
  */
 export function useSeniorX() {
@@ -74,8 +101,10 @@ export function useSeniorX() {
   const [isLikelySeniorX, setIsLikelySeniorX] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const isAuthenticatedRef = useRef(false);
+  const isSyncingRef = useRef(false);
 
   useEffect(() => {
     isAuthenticatedRef.current = isAuthenticated;
@@ -84,7 +113,12 @@ export function useSeniorX() {
   /**
    * Processa a mensagem de autenticação recebida da Senior X
    */
-  const handleAuthMessage = useCallback((data: any): void => {
+  const handleAuthMessage = useCallback(async (data: any): Promise<void> => {
+    // Evita processar múltiplas vezes
+    if (isSyncingRef.current || isAuthenticatedRef.current) {
+      return;
+    }
+
     try {
       // Aceita string JSON ou objeto
       const raw = typeof data === 'string' ? JSON.parse(data) : data;
@@ -94,35 +128,58 @@ export function useSeniorX() {
       const access_token = token?.access_token ?? token?.accessToken;
 
       if (access_token) {
+        const email = token?.email || '';
+        const username = token?.username || '';
+        const fullName = normalizeFullName(token?.fullName || '');
+
+        if (!email) {
+          console.error('[SeniorX] Email não recebido na autenticação');
+          setIsLoading(false);
+          return;
+        }
+
         // Marca que estamos em modo Senior X
         setIsSeniorXMode(true);
         localStorage.setItem(STORAGE_KEY_SENIOR_MODE, 'true');
 
-        // Armazena o token
+        // Armazena o token Senior X
         setAccessToken(access_token);
         localStorage.setItem(STORAGE_KEY_TOKEN, access_token);
 
-        // Monta o objeto do usuário
-        const username = token?.username || '';
+        // Monta o objeto do usuário Senior
         const newUser: SeniorUser = {
           id: normalizeUsername(username),
           username: normalizeUsername(username),
-          fullName: normalizeFullName(token?.fullName || ''),
-          email: token?.email || '',
+          fullName,
+          email,
           tenantDomain: token?.tenantName || ''
         };
 
         setSeniorUser(newUser);
         localStorage.setItem(STORAGE_KEY_USER, JSON.stringify(newUser));
+
+        // Sincroniza com Supabase para ter acesso aos dados
+        isSyncingRef.current = true;
+        setIsSyncing(true);
+        
+        const synced = await syncSeniorUserWithSupabase(email, fullName, normalizeUsername(username));
+        
+        isSyncingRef.current = false;
+        setIsSyncing(false);
         setIsAuthenticated(true);
         setIsLoading(false);
 
-        console.log('[SeniorX] Usuário autenticado:', newUser.fullName);
+        if (synced) {
+          console.log('[SeniorX] Usuário autenticado e sincronizado:', newUser.fullName);
+        } else {
+          console.warn('[SeniorX] Usuário autenticado mas não sincronizado com Supabase');
+        }
       } else {
         console.log('[SeniorX] Mensagem recebida, mas sem access_token');
       }
     } catch (error) {
       console.error('[SeniorX] Erro ao processar mensagem de autenticação:', error);
+      setIsLoading(false);
     }
   }, []);
 
@@ -170,12 +227,42 @@ export function useSeniorX() {
 
       if (storedUser && storedToken) {
         try {
-          setSeniorUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser) as SeniorUser;
+          setSeniorUser(parsedUser);
           setAccessToken(storedToken);
-          setIsAuthenticated(true);
           setIsSeniorXMode(true);
-          setIsLoading(false);
-          console.log('[SeniorX] Dados de autenticação carregados do localStorage');
+          
+          // Verifica se há sessão Supabase válida
+          supabase.auth.getSession().then(async ({ data: { session } }) => {
+            if (session) {
+              // Sessão Supabase válida, apenas restaura o estado
+              setIsAuthenticated(true);
+              setIsLoading(false);
+              console.log('[SeniorX] Dados de autenticação carregados do localStorage com sessão Supabase válida');
+            } else {
+              // Sessão Supabase expirada, precisa re-sincronizar
+              console.log('[SeniorX] Sessão Supabase expirada, re-sincronizando...');
+              isSyncingRef.current = true;
+              setIsSyncing(true);
+              
+              const synced = await syncSeniorUserWithSupabase(
+                parsedUser.email, 
+                parsedUser.fullName, 
+                parsedUser.id
+              );
+              
+              isSyncingRef.current = false;
+              setIsSyncing(false);
+              setIsAuthenticated(true);
+              setIsLoading(false);
+              
+              if (synced) {
+                console.log('[SeniorX] Re-sincronização com Supabase bem sucedida');
+              } else {
+                console.warn('[SeniorX] Falha na re-sincronização com Supabase');
+              }
+            }
+          });
         } catch (e) {
           console.error('[SeniorX] Erro ao carregar dados do localStorage:', e);
           clearSeniorAuth();
@@ -237,6 +324,7 @@ export function useSeniorX() {
     isLikelySeniorX,
     isLoading,
     isAuthenticated,
+    isSyncing,
     clearSeniorAuth,
   };
 }

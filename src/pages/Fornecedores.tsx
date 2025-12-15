@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus, Search, Filter, MoreHorizontal, Mail } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Search, Filter, MoreHorizontal, Mail, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScoreBadge } from "@/components/ui/score-badge";
@@ -24,6 +25,7 @@ import { SendFeedbackDialog } from "@/components/feedback/SendFeedbackDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Fornecedores() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null);
@@ -149,7 +151,10 @@ export default function Fornecedores() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Visualizar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/fornecedores/${fornecedor.id}`)}>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Visualizar
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleEdit(fornecedor)}>
                           Editar
                         </DropdownMenuItem>

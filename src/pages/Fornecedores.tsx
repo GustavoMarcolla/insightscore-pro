@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Search, Filter, MoreHorizontal } from "lucide-react";
+import { Plus, Search, Filter, MoreHorizontal, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScoreBadge } from "@/components/ui/score-badge";
@@ -15,16 +15,19 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useFornecedores, Fornecedor } from "@/hooks/useFornecedores";
 import { FornecedorModal } from "@/components/modals/FornecedorModal";
+import { SendFeedbackDialog } from "@/components/feedback/SendFeedbackDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Fornecedores() {
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null);
+  const [feedbackFornecedor, setFeedbackFornecedor] = useState<Fornecedor | null>(null);
 
   const { 
     fornecedores, 
@@ -151,7 +154,12 @@ export default function Fornecedores() {
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuItem>Nova Qualificação</DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setFeedbackFornecedor(fornecedor)}>
+                          <Mail className="mr-2 h-4 w-4" />
+                          Enviar Feedback
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           onClick={() => toggleSituacao({ id: fornecedor.id, situacao: fornecedor.situacao })}
                           className="text-destructive"
                         >
@@ -178,6 +186,12 @@ export default function Fornecedores() {
         fornecedor={editingFornecedor}
         onSave={handleSave}
         isLoading={isCreating || isUpdating}
+      />
+
+      <SendFeedbackDialog
+        open={!!feedbackFornecedor}
+        onOpenChange={(open) => !open && setFeedbackFornecedor(null)}
+        fornecedor={feedbackFornecedor}
       />
     </div>
   );

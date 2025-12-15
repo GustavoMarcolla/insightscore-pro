@@ -27,13 +27,13 @@ const navItems = [
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut, unifiedUser, isInIframe } = useAuth();
+  const { signOut, unifiedUser, isSeniorXMode } = useAuth();
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
 
   const handleLogout = async () => {
-    // Se está em iframe (Senior X), não faz logout tradicional
-    if (isInIframe) {
+    // Se está em modo Senior X, não faz logout tradicional
+    if (isSeniorXMode) {
       toast({
         title: "Sessão Senior X",
         description: "Para sair, feche a aplicação na plataforma Senior X",

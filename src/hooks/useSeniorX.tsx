@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 const SENIOR_X_ORIGIN = 'https://platform.senior.com.br';
 const STORAGE_KEY_USER = 'senior_user';
 const STORAGE_KEY_TOKEN = 'senior_token';
+const STORAGE_KEY_SENIOR_MODE = 'senior_mode';
 
 // Interface do usuário Senior X
 export interface SeniorUser {
@@ -50,7 +51,7 @@ function normalizeFullName(fullName: string): string {
 export function useSeniorX() {
   const [seniorUser, setSeniorUser] = useState<SeniorUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
-  const [isInIframe, setIsInIframe] = useState(false);
+  const [isSeniorXMode, setIsSeniorXMode] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
@@ -66,6 +67,10 @@ export function useSeniorX() {
       const token = payload.token || {};
 
       if (token?.access_token) {
+        // Marca que estamos em modo Senior X
+        setIsSeniorXMode(true);
+        localStorage.setItem(STORAGE_KEY_SENIOR_MODE, 'true');
+
         // Armazena o token
         const newToken = token.access_token;
         setAccessToken(newToken);
@@ -100,87 +105,75 @@ export function useSeniorX() {
     setSeniorUser(null);
     setAccessToken(null);
     setIsAuthenticated(false);
+    setIsSeniorXMode(false);
     localStorage.removeItem(STORAGE_KEY_USER);
     localStorage.removeItem(STORAGE_KEY_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_SENIOR_MODE);
   }, []);
 
   useEffect(() => {
-    // Verifica se está rodando em iframe
-    const inIframe = window.self !== window.top;
-    setIsInIframe(inIframe);
+    // Verifica se já estava em modo Senior X (reload da página)
+    const wasSeniorMode = localStorage.getItem(STORAGE_KEY_SENIOR_MODE) === 'true';
+    
+    if (wasSeniorMode) {
+      // Carrega dados existentes do localStorage
+      const storedUser = localStorage.getItem(STORAGE_KEY_USER);
+      const storedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
 
-    // Se não está em iframe, não precisa fazer nada
-    if (!inIframe) {
-      setIsLoading(false);
-      return;
-    }
-
-    console.log('[SeniorX] Detectado ambiente iframe, iniciando autenticação SSO');
-
-    // Carrega dados existentes do localStorage (se houver)
-    const storedUser = localStorage.getItem(STORAGE_KEY_USER);
-    const storedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
-
-    if (storedUser && storedToken) {
-      try {
-        setSeniorUser(JSON.parse(storedUser));
-        setAccessToken(storedToken);
-        setIsAuthenticated(true);
-        console.log('[SeniorX] Dados de autenticação carregados do localStorage');
-      } catch (e) {
-        console.error('[SeniorX] Erro ao carregar dados do localStorage:', e);
+      if (storedUser && storedToken) {
+        try {
+          setSeniorUser(JSON.parse(storedUser));
+          setAccessToken(storedToken);
+          setIsAuthenticated(true);
+          setIsSeniorXMode(true);
+          console.log('[SeniorX] Dados de autenticação carregados do localStorage');
+        } catch (e) {
+          console.error('[SeniorX] Erro ao carregar dados do localStorage:', e);
+          clearSeniorAuth();
+        }
       }
     }
 
     // Listener para mensagens da plataforma pai
     const handleMessage = (event: MessageEvent) => {
-      // CRÍTICO: Validar origem da mensagem
+      // CRÍTICO: Validar origem da mensagem - só aceita do Senior X
       if (event.origin !== SENIOR_X_ORIGIN) {
         return; // Ignora mensagens de outras origens
       }
 
-      console.log('[SeniorX] Mensagem recebida da plataforma');
+      console.log('[SeniorX] Mensagem recebida da plataforma Senior X');
       handleAuthMessage(event.data);
     };
 
     window.addEventListener('message', handleMessage);
 
-    // Solicita dados de autenticação à plataforma pai
-    if (window.parent && window.parent !== window) {
-      console.log('[SeniorX] Solicitando dados de autenticação à plataforma pai');
-      window.parent.postMessage('requestInitialData', SENIOR_X_ORIGIN);
+    // Se está em iframe, solicita dados de autenticação à plataforma pai
+    const isInIframe = window.self !== window.top;
+    if (isInIframe && window.parent) {
+      console.log('[SeniorX] Em iframe, solicitando dados de autenticação');
+      // Envia para Senior X (se for o pai correto, responderá)
+      try {
+        window.parent.postMessage('requestInitialData', SENIOR_X_ORIGIN);
+      } catch (e) {
+        // Ignora erro se não conseguir enviar (não é Senior X)
+      }
     }
 
-    // Timeout para verificação de autenticação
-    const timeouts = [
-      setTimeout(() => {
-        if (!isAuthenticated) {
-          console.log('[SeniorX] Verificando autenticação (500ms)...');
-        }
-      }, 500),
-      setTimeout(() => {
-        if (!isAuthenticated) {
-          console.log('[SeniorX] Verificando autenticação (1500ms)...');
-        }
-      }, 1500),
-      setTimeout(() => {
-        setIsLoading(false);
-        if (!isAuthenticated) {
-          console.log('[SeniorX] Timeout de autenticação atingido');
-        }
-      }, 3000)
-    ];
+    // Timeout para finalizar loading (não bloqueia se não for Senior X)
+    const timeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 2000);
 
     return () => {
       window.removeEventListener('message', handleMessage);
-      timeouts.forEach(clearTimeout);
+      clearTimeout(timeout);
     };
-  }, [handleAuthMessage, isAuthenticated]);
+  }, [handleAuthMessage, clearSeniorAuth]);
 
   return {
     seniorUser,
     accessToken,
-    isInIframe,
+    isSeniorXMode,
     isLoading,
     isAuthenticated,
     clearSeniorAuth,

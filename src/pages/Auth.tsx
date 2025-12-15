@@ -50,7 +50,7 @@ export default function Auth() {
     resetPassword,
     user,
     loading,
-    isInIframe,
+    isSeniorXMode,
     seniorAuthenticated
   } = useAuth();
 
@@ -185,8 +185,8 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
-  // Se está em iframe, mostra mensagem de aguardando autenticação Senior X
-  if (isInIframe) {
+  // Se está em modo Senior X e aguardando autenticação, mostra mensagem
+  if (isSeniorXMode && !seniorAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4 text-center p-8">

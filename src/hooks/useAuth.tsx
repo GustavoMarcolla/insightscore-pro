@@ -19,15 +19,15 @@ export function useAuth() {
   // Integração com Senior X
   const {
     seniorUser,
-    isInIframe,
+    isSeniorXMode,
     isLoading: seniorLoading,
     isAuthenticated: seniorAuthenticated,
     clearSeniorAuth,
   } = useSeniorX();
 
   useEffect(() => {
-    // Se está em iframe e já autenticou via Senior X, não precisa do Supabase
-    if (isInIframe && seniorAuthenticated) {
+    // Se já autenticou via Senior X, não precisa do Supabase auth
+    if (isSeniorXMode && seniorAuthenticated) {
       setLoading(false);
       return;
     }
@@ -49,7 +49,7 @@ export function useAuth() {
     });
 
     return () => subscription.unsubscribe();
-  }, [isInIframe, seniorAuthenticated]);
+  }, [isSeniorXMode, seniorAuthenticated]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -119,7 +119,7 @@ export function useAuth() {
   const isAuthenticated = !!(user || (seniorAuthenticated && seniorUser));
   
   // Loading considera ambos os sistemas
-  const isLoading = isInIframe ? (loading && seniorLoading) : loading;
+  const isLoading = isSeniorXMode ? seniorLoading : loading;
 
   return {
     user,
@@ -132,7 +132,7 @@ export function useAuth() {
     // Campos para integração Senior X
     seniorUser,
     seniorAuthenticated,
-    isInIframe,
+    isSeniorXMode,
     isAuthenticated,
     unifiedUser: getUnifiedUser(),
   };

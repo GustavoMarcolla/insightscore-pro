@@ -2,7 +2,7 @@ import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 
 export function ProtectedRoute() {
-  const { user, loading, isAuthenticated, isInIframe, seniorAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, isSeniorXMode, seniorAuthenticated } = useAuth();
 
   if (loading) {
     return (
@@ -17,8 +17,8 @@ export function ProtectedRoute() {
 
   // Aceita autenticação via Supabase OU Senior X
   if (!isAuthenticated) {
-    // Se está em iframe mas não autenticou via Senior X, mostra mensagem específica
-    if (isInIframe && !seniorAuthenticated) {
+    // Se está em modo Senior X mas ainda não autenticou, mostra mensagem específica
+    if (isSeniorXMode && !seniorAuthenticated) {
       return (
         <div className="flex min-h-screen items-center justify-center bg-background">
           <div className="flex flex-col items-center gap-4 text-center p-8">

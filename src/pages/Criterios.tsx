@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Search, MoreHorizontal, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ import { CriterioModal } from "@/components/modals/CriterioModal";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Criterios() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [grupoFilter, setGrupoFilter] = useState("Todos");
   const [modalOpen, setModalOpen] = useState(false);
@@ -46,6 +48,18 @@ export default function Criterios() {
   } = useCriterios();
 
   const { grupos } = useGrupos();
+
+  // Filter by grupo when coming from grupos page
+  useEffect(() => {
+    const grupoId = searchParams.get('grupo');
+    if (grupoId && grupos.length > 0) {
+      const grupo = grupos.find(g => g.id === grupoId);
+      if (grupo) {
+        setGrupoFilter(grupo.descricao);
+      }
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, grupos, setSearchParams]);
 
   const gruposOptions = ["Todos", ...new Set(criterios.map((c) => c.grupo_descricao).filter(Boolean))];
 

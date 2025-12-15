@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus, Search, MoreHorizontal, FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,7 @@ import { GrupoModal } from "@/components/modals/GrupoModal";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Grupos() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGrupo, setEditingGrupo] = useState<GrupoWithCount | null>(null);
@@ -151,7 +153,10 @@ export default function Grupos() {
                         <DropdownMenuItem onClick={() => handleEdit(grupo)}>
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem>Ver Critérios</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/criterios?grupo=${grupo.id}`)}>
+                          <FolderTree className="mr-2 h-4 w-4" />
+                          Ver Critérios
+                        </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={() => toggleSituacao({ id: grupo.id, situacao: grupo.situacao })}
                           className="text-destructive"

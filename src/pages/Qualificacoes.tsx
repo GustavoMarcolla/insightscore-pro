@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Search, MoreHorizontal, FileText, Eye, Trash2, PlayCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -38,12 +38,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Qualificacoes() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
   const [wizardOpen, setWizardOpen] = useState(false);
   const [continuarOpen, setContinuarOpen] = useState(false);
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentoToDelete, setDocumentoToDelete] = useState<string | null>(null);
+
+  // Open wizard if coming from fornecedores with ?nova=true
+  useEffect(() => {
+    if (searchParams.get('nova') === 'true') {
+      setWizardOpen(true);
+      setSearchParams({}, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const { documentos, isLoading, deleteDocumento, isDeleting } = useDocumentos();
 

@@ -169,7 +169,7 @@ export default function Auth() {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Left Panel - Brand */}
-      <div className="hidden w-1/2 bg-sidebar lg:flex lg:flex-col lg:justify-between p-12">
+      <div className="hidden w-1/2 bg-sidebar text-sidebar-foreground lg:flex lg:flex-col lg:justify-between p-12">
         <div>
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-teal">

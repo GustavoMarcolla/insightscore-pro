@@ -31,6 +31,7 @@ import {
 } from "recharts";
 import { useState, useMemo } from "react";
 import { SendFeedbackDialog } from "@/components/feedback/SendFeedbackDialog";
+import { ContatosSection } from "@/components/fornecedor/ContatosSection";
 import {
   Select,
   SelectContent,
@@ -570,34 +571,7 @@ export default function FornecedorDetalhes() {
       </Card>
 
       {/* Contacts */}
-      {fornecedor.contatos.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Contatos
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {fornecedor.contatos.map((contato) => (
-                <div
-                  key={contato.id}
-                  className="rounded-md border border-border p-4"
-                >
-                  <p className="font-medium">{contato.nome}</p>
-                  {contato.email && (
-                    <p className="text-sm text-muted-foreground">{contato.email}</p>
-                  )}
-                  {contato.whatsapp && (
-                    <p className="text-sm text-muted-foreground">{contato.whatsapp}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <ContatosSection fornecedorId={id!} />
 
       <SendFeedbackDialog
         open={feedbackOpen}

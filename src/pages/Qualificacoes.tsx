@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, MoreHorizontal, FileText, Eye } from "lucide-react";
+import { Plus, Search, MoreHorizontal, FileText, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -69,10 +69,6 @@ export default function Qualificacoes() {
               className="pl-10"
             />
           </div>
-          <Button variant="outline">
-            <Filter className="mr-2 h-4 w-4" />
-            Mais Filtros
-          </Button>
         </div>
       </div>
 

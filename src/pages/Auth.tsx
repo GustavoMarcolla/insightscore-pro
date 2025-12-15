@@ -7,24 +7,31 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { z } from "zod";
-
 type AuthMode = "login" | "register" | "forgot";
-
 const loginSchema = z.object({
-  email: z.string().email({ message: "E-mail inválido" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
+  email: z.string().email({
+    message: "E-mail inválido"
+  }),
+  password: z.string().min(6, {
+    message: "Senha deve ter pelo menos 6 caracteres"
+  })
 });
-
 const registerSchema = z.object({
-  name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
-  email: z.string().email({ message: "E-mail inválido" }),
-  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
+  name: z.string().min(2, {
+    message: "Nome deve ter pelo menos 2 caracteres"
+  }),
+  email: z.string().email({
+    message: "E-mail inválido"
+  }),
+  password: z.string().min(6, {
+    message: "Senha deve ter pelo menos 6 caracteres"
+  })
 });
-
 const forgotSchema = z.object({
-  email: z.string().email({ message: "E-mail inválido" }),
+  email: z.string().email({
+    message: "E-mail inválido"
+  })
 });
-
 export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,115 +41,134 @@ export default function Auth() {
   const [name, setName] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { signIn, signUp, resetPassword, user, loading } = useAuth();
+  const {
+    toast
+  } = useToast();
+  const {
+    signIn,
+    signUp,
+    resetPassword,
+    user,
+    loading
+  } = useAuth();
 
   // Redirect if already authenticated
   useEffect(() => {
     if (!loading && user) {
-      navigate("/dashboard", { replace: true });
+      navigate("/dashboard", {
+        replace: true
+      });
     }
   }, [user, loading, navigate]);
-
   const clearErrors = () => setErrors({});
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearErrors();
     setIsLoading(true);
-
     try {
       if (mode === "login") {
-        const validation = loginSchema.safeParse({ email, password });
+        const validation = loginSchema.safeParse({
+          email,
+          password
+        });
         if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
-          validation.error.errors.forEach((err) => {
+          validation.error.errors.forEach(err => {
             if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
           });
           setErrors(fieldErrors);
           setIsLoading(false);
           return;
         }
-
-        const { error } = await signIn(email, password);
+        const {
+          error
+        } = await signIn(email, password);
         if (error) {
           if (error.message.includes("Invalid login credentials")) {
             toast({
               variant: "destructive",
               title: "Erro ao entrar",
-              description: "E-mail ou senha incorretos",
+              description: "E-mail ou senha incorretos"
             });
           } else {
             toast({
               variant: "destructive",
               title: "Erro ao entrar",
-              description: error.message,
+              description: error.message
             });
           }
         } else {
           toast({
             title: "Login realizado",
-            description: "Bem-vindo ao Qualifica+",
+            description: "Bem-vindo ao Qualifica+"
           });
           navigate("/dashboard");
         }
       } else if (mode === "register") {
-        const validation = registerSchema.safeParse({ name, email, password });
+        const validation = registerSchema.safeParse({
+          name,
+          email,
+          password
+        });
         if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
-          validation.error.errors.forEach((err) => {
+          validation.error.errors.forEach(err => {
             if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
           });
           setErrors(fieldErrors);
           setIsLoading(false);
           return;
         }
-
-        const { error } = await signUp(email, password, name);
+        const {
+          error
+        } = await signUp(email, password, name);
         if (error) {
           if (error.message.includes("already registered")) {
             toast({
               variant: "destructive",
               title: "Erro ao criar conta",
-              description: "Este e-mail já está cadastrado",
+              description: "Este e-mail já está cadastrado"
             });
           } else {
             toast({
               variant: "destructive",
               title: "Erro ao criar conta",
-              description: error.message,
+              description: error.message
             });
           }
         } else {
           toast({
             title: "Conta criada com sucesso",
-            description: "Você já pode acessar o sistema",
+            description: "Você já pode acessar o sistema"
           });
           navigate("/dashboard");
         }
       } else if (mode === "forgot") {
-        const validation = forgotSchema.safeParse({ email });
+        const validation = forgotSchema.safeParse({
+          email
+        });
         if (!validation.success) {
           const fieldErrors: Record<string, string> = {};
-          validation.error.errors.forEach((err) => {
+          validation.error.errors.forEach(err => {
             if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
           });
           setErrors(fieldErrors);
           setIsLoading(false);
           return;
         }
-
-        const { error } = await resetPassword(email);
+        const {
+          error
+        } = await resetPassword(email);
         if (error) {
           toast({
             variant: "destructive",
             title: "Erro ao recuperar senha",
-            description: error.message,
+            description: error.message
           });
         } else {
           toast({
             title: "E-mail enviado",
-            description: "Verifique sua caixa de entrada para redefinir a senha",
+            description: "Verifique sua caixa de entrada para redefinir a senha"
           });
           setMode("login");
         }
@@ -151,23 +177,18 @@ export default function Auth() {
       toast({
         variant: "destructive",
         title: "Erro inesperado",
-        description: "Tente novamente mais tarde",
+        description: "Tente novamente mais tarde"
       });
     } finally {
       setIsLoading(false);
     }
   };
-
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+    return <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="flex min-h-screen bg-background">
+  return <div className="flex min-h-screen bg-background">
       {/* Left Panel - Brand */}
       <div className="hidden w-1/2 bg-sidebar text-sidebar-foreground lg:flex lg:flex-col lg:justify-between p-12">
         <div>
@@ -191,9 +212,7 @@ export default function Auth() {
           </p>
         </div>
 
-        <p className="text-sm text-sidebar-muted">
-          © 2024 Qualifica+. Todos os direitos reservados.
-        </p>
+        <p className="text-sm text-sidebar-muted">© 2025 Qualifica+. Todos os direitos reservados.</p>
       </div>
 
       {/* Right Panel - Form */}
@@ -221,27 +240,16 @@ export default function Auth() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {mode === "register" && (
-              <div className="space-y-2">
+            {mode === "register" && <div className="space-y-2">
                 <Label htmlFor="name" className="field-label">
                   Nome completo<span className="required-asterisk">*</span>
                 </Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Seu nome"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className={`pl-10 ${errors.name ? "border-destructive" : ""}`}
-                  />
+                  <Input id="name" type="text" placeholder="Seu nome" value={name} onChange={e => setName(e.target.value)} className={`pl-10 ${errors.name ? "border-destructive" : ""}`} />
                 </div>
-                {errors.name && (
-                  <p className="text-sm text-destructive">{errors.name}</p>
-                )}
-              </div>
-            )}
+                {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+              </div>}
 
             <div className="space-y-2">
               <Label htmlFor="email" className="field-label">
@@ -249,110 +257,61 @@ export default function Auth() {
               </Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
-                />
+                <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={e => setEmail(e.target.value)} className={`pl-10 ${errors.email ? "border-destructive" : ""}`} />
               </div>
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
+              {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
             </div>
 
-            {mode !== "forgot" && (
-              <div className="space-y-2">
+            {mode !== "forgot" && <div className="space-y-2">
                 <Label htmlFor="password" className="field-label">
                   Senha<span className="required-asterisk">*</span>
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                  <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {errors.password && (
-                  <p className="text-sm text-destructive">{errors.password}</p>
-                )}
-              </div>
-            )}
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
+              </div>}
 
-            {mode === "login" && (
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setMode("forgot")}
-                  className="text-sm text-primary hover:underline"
-                >
+            {mode === "login" && <div className="flex justify-end">
+                <button type="button" onClick={() => setMode("forgot")} className="text-sm text-primary hover:underline">
                   Esqueceu a senha?
                 </button>
-              </div>
-            )}
+              </div>}
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-              ) : (
-                <>
+              {isLoading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> : <>
                   {mode === "login" && "Entrar"}
                   {mode === "register" && "Criar conta"}
                   {mode === "forgot" && "Enviar e-mail"}
-                </>
-              )}
+                </>}
             </Button>
           </form>
 
           <div className="text-center text-sm">
-            {mode === "login" && (
-              <p className="text-muted-foreground">
+            {mode === "login" && <p className="text-muted-foreground">
                 Não tem uma conta?{" "}
-                <button
-                  onClick={() => {
-                    setMode("register");
-                    clearErrors();
-                  }}
-                  className="text-primary hover:underline"
-                >
+                <button onClick={() => {
+              setMode("register");
+              clearErrors();
+            }} className="text-primary hover:underline">
                   Cadastre-se
                 </button>
-              </p>
-            )}
-            {(mode === "register" || mode === "forgot") && (
-              <p className="text-muted-foreground">
+              </p>}
+            {(mode === "register" || mode === "forgot") && <p className="text-muted-foreground">
                 Já tem uma conta?{" "}
-                <button
-                  onClick={() => {
-                    setMode("login");
-                    clearErrors();
-                  }}
-                  className="text-primary hover:underline"
-                >
+                <button onClick={() => {
+              setMode("login");
+              clearErrors();
+            }} className="text-primary hover:underline">
                   Entrar
                 </button>
-              </p>
-            )}
+              </p>}
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 }

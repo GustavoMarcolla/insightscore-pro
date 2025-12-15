@@ -29,10 +29,12 @@ import { useCriterios, CriterioWithGrupo } from "@/hooks/useCriterios";
 import { useGrupos } from "@/hooks/useGrupos";
 import { CriterioModal } from "@/components/modals/CriterioModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TablePagination, usePagination } from "@/components/ui/table-pagination";
 
 export default function Criterios() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [grupoFilter, setGrupoFilter] = useState("Todos");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingCriterio, setEditingCriterio] = useState<CriterioWithGrupo | null>(null);
@@ -70,6 +72,14 @@ export default function Criterios() {
     const matchGrupo = grupoFilter === "Todos" || c.grupo_descricao === grupoFilter;
     return matchSearch && matchGrupo;
   });
+
+  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(filtered, 10);
+  const paginatedItems = getPaginatedItems(currentPage);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, grupoFilter]);
 
   const handleSave = (data: { id?: string; codigo: string; descricao: string; grupo_id?: string }) => {
     if (data.id) {
@@ -159,7 +169,7 @@ export default function Criterios() {
                 </TableRow>
               ))
             ) : (
-              filtered.map((criterio) => (
+              paginatedItems.map((criterio) => (
                 <TableRow key={criterio.id} className="h-12">
                   <TableCell className="font-medium text-primary">
                     {criterio.codigo}
@@ -210,6 +220,13 @@ export default function Criterios() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+        />
         {!isLoading && filtered.length === 0 && (
           <div className="py-12 text-center text-muted-foreground">
             Nenhum critério encontrado

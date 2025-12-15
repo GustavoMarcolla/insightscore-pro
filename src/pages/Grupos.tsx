@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, MoreHorizontal, FolderTree } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,12 @@ import {
 import { useGrupos, GrupoWithCount } from "@/hooks/useGrupos";
 import { GrupoModal } from "@/components/modals/GrupoModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TablePagination, usePagination } from "@/components/ui/table-pagination";
 
 export default function Grupos() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingGrupo, setEditingGrupo] = useState<GrupoWithCount | null>(null);
 
@@ -43,6 +45,14 @@ export default function Grupos() {
       g.descricao.toLowerCase().includes(search.toLowerCase()) ||
       g.codigo.toLowerCase().includes(search.toLowerCase())
   );
+
+  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(filtered, 10);
+  const paginatedItems = getPaginatedItems(currentPage);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   const handleSave = (data: { id?: string; codigo: string; descricao: string }) => {
     if (data.id) {
@@ -118,7 +128,7 @@ export default function Grupos() {
                 </TableRow>
               ))
             ) : (
-              filtered.map((grupo) => (
+              paginatedItems.map((grupo) => (
                 <TableRow key={grupo.id} className="h-12">
                   <TableCell className="font-medium text-primary">
                     {grupo.codigo}
@@ -171,6 +181,13 @@ export default function Grupos() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+        />
         {!isLoading && filtered.length === 0 && (
           <div className="py-12 text-center text-muted-foreground">
             Nenhum grupo encontrado

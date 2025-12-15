@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Plus, Search, Filter, MoreHorizontal, FileText, Calendar } from "lucide-react";
+import { Plus, Search, Filter, MoreHorizontal, FileText, Eye } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ScoreBadge } from "@/components/ui/score-badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -17,63 +19,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Mock data
-const qualificacoes = [
-  { 
-    id: "1", 
-    fornecedor: "Fornecedor Alpha Ltda", 
-    notaFiscal: "NF-2024-001234", 
-    dataRecebimento: "2024-01-15", 
-    score: 95,
-    criteriosAvaliados: 8
-  },
-  { 
-    id: "2", 
-    fornecedor: "Tech Solutions S.A.", 
-    notaFiscal: "NF-2024-001235", 
-    dataRecebimento: "2024-01-14", 
-    score: 88,
-    criteriosAvaliados: 6
-  },
-  { 
-    id: "3", 
-    fornecedor: "Industrial Parts Co.", 
-    notaFiscal: "NF-2024-001236", 
-    dataRecebimento: "2024-01-13", 
-    score: 72,
-    criteriosAvaliados: 7
-  },
-  { 
-    id: "4", 
-    fornecedor: "Quality Materials", 
-    notaFiscal: "NF-2024-001237", 
-    dataRecebimento: "2024-01-12", 
-    score: 65,
-    criteriosAvaliados: 5
-  },
-  { 
-    id: "5", 
-    fornecedor: "Basic Supplies", 
-    notaFiscal: "NF-2024-001238", 
-    dataRecebimento: "2024-01-11", 
-    score: 55,
-    criteriosAvaliados: 8
-  },
-];
+import { useDocumentos } from "@/hooks/useDocumentos";
+import { QualificacaoWizard } from "@/components/qualificacao/QualificacaoWizard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Qualificacoes() {
   const [search, setSearch] = useState("");
+  const [wizardOpen, setWizardOpen] = useState(false);
 
-  const filtered = qualificacoes.filter(
-    (q) =>
-      q.fornecedor.toLowerCase().includes(search.toLowerCase()) ||
-      q.notaFiscal.toLowerCase().includes(search.toLowerCase())
+  const { documentos, isLoading } = useDocumentos();
+
+  const filtered = documentos.filter(
+    (d) =>
+      d.fornecedor_nome.toLowerCase().includes(search.toLowerCase()) ||
+      d.fornecedor_codigo.toLowerCase().includes(search.toLowerCase()) ||
+      d.numero_nf?.includes(search) ||
+      d.serie_nf?.includes(search)
   );
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("pt-BR");
-  };
 
   return (
     <div className="space-y-6">
@@ -81,10 +43,10 @@ export default function Qualificacoes() {
         <div>
           <h1 className="page-title">Qualificações</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Histórico de qualificações realizadas
+            Gerencie as avaliações de recebimento
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setWizardOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Nova Qualificação
         </Button>
@@ -106,10 +68,6 @@ export default function Qualificacoes() {
             />
           </div>
           <Button variant="outline">
-            <Calendar className="mr-2 h-4 w-4" />
-            Período
-          </Button>
-          <Button variant="outline">
             <Filter className="mr-2 h-4 w-4" />
             Mais Filtros
           </Button>
@@ -121,60 +79,98 @@ export default function Qualificacoes() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50">
+              <TableHead className="font-semibold">Data</TableHead>
               <TableHead className="font-semibold">Fornecedor</TableHead>
-              <TableHead className="font-semibold">Nota Fiscal</TableHead>
-              <TableHead className="font-semibold">Data Recebimento</TableHead>
-              <TableHead className="font-semibold text-center">Critérios</TableHead>
-              <TableHead className="font-semibold text-center">Score</TableHead>
+              <TableHead className="font-semibold">NF</TableHead>
+              <TableHead className="font-semibold text-center">Status</TableHead>
               <TableHead className="font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((qualificacao) => (
-              <TableRow key={qualificacao.id} className="h-12">
-                <TableCell className="font-medium">{qualificacao.fornecedor}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2 text-primary">
-                    <FileText className="h-4 w-4" />
-                    {qualificacao.notaFiscal}
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {formatDate(qualificacao.dataRecebimento)}
-                </TableCell>
-                <TableCell className="text-center">
-                  {qualificacao.criteriosAvaliados}
-                </TableCell>
-                <TableCell className="text-center">
-                  <ScoreBadge score={qualificacao.score} size="sm" />
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Visualizar Detalhes</DropdownMenuItem>
-                      <DropdownMenuItem>Editar</DropdownMenuItem>
-                      <DropdownMenuItem>Enviar ao Fornecedor</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        Excluir
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell className="text-center"><Skeleton className="h-6 w-20 mx-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : filtered.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="py-12 text-center text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 text-muted" />
+                  <p className="font-medium">Nenhuma qualificação encontrada</p>
+                  <p className="text-sm mt-1">Clique em "Nova Qualificação" para começar</p>
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filtered.map((doc) => (
+                <TableRow key={doc.id} className="h-12">
+                  <TableCell className="font-medium">
+                    {format(new Date(doc.data_recebimento), "dd/MM/yyyy", { locale: ptBR })}
+                  </TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{doc.fornecedor_nome}</p>
+                      <p className="text-xs text-muted-foreground">{doc.fornecedor_codigo}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {doc.serie_nf || doc.numero_nf ? (
+                      <>
+                        {doc.serie_nf && `Série ${doc.serie_nf} - `}
+                        Nº {doc.numero_nf || "-"}
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge
+                      variant={doc.status === "concluido" ? "default" : "secondary"}
+                      className={
+                        doc.status === "concluido"
+                          ? "bg-success text-success-foreground"
+                          : ""
+                      }
+                    >
+                      {doc.status === "concluido" ? "Concluído" : "Pendente"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <Eye className="mr-2 h-4 w-4" />
+                          Visualizar
+                        </DropdownMenuItem>
+                        {doc.status === "pendente" && (
+                          <DropdownMenuItem>Continuar Avaliação</DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem className="text-destructive">
+                          Excluir
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
-        {filtered.length === 0 && (
-          <div className="py-12 text-center text-muted-foreground">
-            Nenhuma qualificação encontrada
-          </div>
-        )}
       </div>
+
+      <QualificacaoWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+      />
     </div>
   );
 }

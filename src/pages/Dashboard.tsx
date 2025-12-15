@@ -124,7 +124,12 @@ export default function Dashboard() {
           }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />) : bottomSuppliers.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">Nenhum fornecedor em risco</p> : bottomSuppliers.map((supplier, index) => <div key={supplier.id} className="flex items-center justify-between rounded-md bg-secondary/50 px-3 py-2 animate-slide-in" style={{
             animationDelay: `${index * 50}ms`
           }}>
-                  <span className="text-sm font-medium">{supplier.nome}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-xs font-semibold text-destructive-foreground">
+                      {index + 1}
+                    </span>
+                    <span className="text-sm font-medium">{supplier.nome}</span>
+                  </div>
                   <ScoreBadge score={supplier.score_atual || 0} size="sm" />
                 </div>)}
           </div>

@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Fornecedores from "./pages/Fornecedores";
+import FornecedorDetalhes from "./pages/FornecedorDetalhes";
 import Grupos from "./pages/Grupos";
 import Criterios from "./pages/Criterios";
 import Qualificacoes from "./pages/Qualificacoes";
@@ -31,6 +32,7 @@ const App = () => (
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/fornecedores" element={<Fornecedores />} />
+              <Route path="/fornecedores/:id" element={<FornecedorDetalhes />} />
               <Route path="/grupos" element={<Grupos />} />
               <Route path="/criterios" element={<Criterios />} />
               <Route path="/qualificacoes" element={<Qualificacoes />} />

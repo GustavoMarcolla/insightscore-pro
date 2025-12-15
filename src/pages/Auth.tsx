@@ -49,17 +49,19 @@ export default function Auth() {
     signUp,
     resetPassword,
     user,
-    loading
+    loading,
+    isInIframe,
+    seniorAuthenticated
   } = useAuth();
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated (either Supabase or Senior X)
   useEffect(() => {
-    if (!loading && user) {
+    if (!loading && (user || seniorAuthenticated)) {
       navigate("/dashboard", {
         replace: true
       });
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, seniorAuthenticated]);
   const clearErrors = () => setErrors({});
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -183,6 +185,22 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
+  // Se está em iframe, mostra mensagem de aguardando autenticação Senior X
+  if (isInIframe) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4 text-center p-8">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-teal">
+            <span className="text-xl font-bold text-white">Q+</span>
+          </div>
+          <h2 className="text-xl font-semibold">Qualifica+</h2>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          <p className="text-muted-foreground">Aguardando autenticação Senior X...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />

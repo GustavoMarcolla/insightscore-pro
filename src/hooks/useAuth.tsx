@@ -1,13 +1,37 @@
 import { useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { useSeniorX, SeniorUser } from "./useSeniorX";
+
+// Interface para unificar usuário Supabase e Senior X
+export interface UnifiedUser {
+  id: string;
+  email: string;
+  fullName: string;
+  authProvider: 'supabase' | 'seniorx';
+}
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Integração com Senior X
+  const {
+    seniorUser,
+    isInIframe,
+    isLoading: seniorLoading,
+    isAuthenticated: seniorAuthenticated,
+    clearSeniorAuth,
+  } = useSeniorX();
+
   useEffect(() => {
+    // Se está em iframe e já autenticou via Senior X, não precisa do Supabase
+    if (isInIframe && seniorAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -25,7 +49,7 @@ export function useAuth() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [isInIframe, seniorAuthenticated]);
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -52,6 +76,11 @@ export function useAuth() {
   };
 
   const signOut = async () => {
+    // Limpa autenticação Senior X se existir
+    if (seniorAuthenticated) {
+      clearSeniorAuth();
+    }
+    
     const { error } = await supabase.auth.signOut();
     return { error };
   };
@@ -63,13 +92,48 @@ export function useAuth() {
     return { error };
   };
 
+  // Cria usuário unificado
+  const getUnifiedUser = (): UnifiedUser | null => {
+    if (seniorAuthenticated && seniorUser) {
+      return {
+        id: seniorUser.id,
+        email: seniorUser.email,
+        fullName: seniorUser.fullName,
+        authProvider: 'seniorx',
+      };
+    }
+    
+    if (user) {
+      return {
+        id: user.id,
+        email: user.email || '',
+        fullName: user.user_metadata?.full_name || '',
+        authProvider: 'supabase',
+      };
+    }
+    
+    return null;
+  };
+
+  // Verifica se está autenticado (por qualquer método)
+  const isAuthenticated = !!(user || (seniorAuthenticated && seniorUser));
+  
+  // Loading considera ambos os sistemas
+  const isLoading = isInIframe ? (loading && seniorLoading) : loading;
+
   return {
     user,
     session,
-    loading,
+    loading: isLoading,
     signIn,
     signUp,
     signOut,
     resetPassword,
+    // Campos para integração Senior X
+    seniorUser,
+    seniorAuthenticated,
+    isInIframe,
+    isAuthenticated,
+    unifiedUser: getUnifiedUser(),
   };
 }

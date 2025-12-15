@@ -32,8 +32,11 @@ export default function Dashboard() {
         <CardHeader className="pb-2">
           <CardTitle className="flex items-center gap-2 text-lg">
             <TrendingUp className="h-5 w-5 text-primary" />
-            Evolução do Score Médio - Últimos 12 Meses
+            Score Médio das Avaliações por Mês
           </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Média das notas atribuídas nas qualificações realizadas em cada mês
+          </p>
         </CardHeader>
         <CardContent>
           {isLoading ? (

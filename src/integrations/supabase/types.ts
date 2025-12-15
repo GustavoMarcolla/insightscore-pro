@@ -14,6 +14,145 @@ export type Database = {
   }
   public: {
     Tables: {
+      criterios: {
+        Row: {
+          codigo: string
+          created_at: string
+          descricao: string
+          grupo_id: string | null
+          id: string
+          situacao: string
+          updated_at: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          descricao: string
+          grupo_id?: string | null
+          id?: string
+          situacao?: string
+          updated_at?: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          descricao?: string
+          grupo_id?: string | null
+          id?: string
+          situacao?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "criterios_grupo_id_fkey"
+            columns: ["grupo_id"]
+            isOneToOne: false
+            referencedRelation: "grupos_qualificacao"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fornecedor_contatos: {
+        Row: {
+          created_at: string
+          email: string | null
+          fornecedor_id: string
+          id: string
+          nome: string
+          whatsapp: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          fornecedor_id: string
+          id?: string
+          nome: string
+          whatsapp?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          fornecedor_id?: string
+          id?: string
+          nome?: string
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fornecedor_contatos_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fornecedores: {
+        Row: {
+          cnpj: string
+          codigo: string
+          created_at: string
+          endereco: string | null
+          id: string
+          nome: string
+          score_atual: number | null
+          situacao: string
+          total_avaliacoes: number | null
+          updated_at: string
+        }
+        Insert: {
+          cnpj: string
+          codigo: string
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          nome: string
+          score_atual?: number | null
+          situacao?: string
+          total_avaliacoes?: number | null
+          updated_at?: string
+        }
+        Update: {
+          cnpj?: string
+          codigo?: string
+          created_at?: string
+          endereco?: string | null
+          id?: string
+          nome?: string
+          score_atual?: number | null
+          situacao?: string
+          total_avaliacoes?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      grupos_qualificacao: {
+        Row: {
+          codigo: string
+          created_at: string
+          descricao: string
+          id: string
+          situacao: string
+          updated_at: string
+        }
+        Insert: {
+          codigo: string
+          created_at?: string
+          descricao: string
+          id?: string
+          situacao?: string
+          updated_at?: string
+        }
+        Update: {
+          codigo?: string
+          created_at?: string
+          descricao?: string
+          id?: string
+          situacao?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

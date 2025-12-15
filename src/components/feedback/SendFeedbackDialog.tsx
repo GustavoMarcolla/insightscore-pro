@@ -49,10 +49,17 @@ export function SendFeedbackDialog({ open, onOpenChange, fornecedor }: SendFeedb
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error sending feedback:", error);
+      
+      const errorMessage = error.message || "Não foi possível enviar o email.";
+      const isNoContactError = errorMessage.toLowerCase().includes("contato") || 
+                               errorMessage.toLowerCase().includes("email");
+      
       toast({
         variant: "destructive",
-        title: "Erro ao enviar feedback",
-        description: error.message || "Não foi possível enviar o email.",
+        title: isNoContactError ? "Fornecedor sem contatos" : "Erro ao enviar feedback",
+        description: isNoContactError 
+          ? "Este fornecedor não possui contatos com email cadastrado. Cadastre um contato com email na página de detalhes do fornecedor."
+          : errorMessage,
       });
     } finally {
       setIsSending(false);

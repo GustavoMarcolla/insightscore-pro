@@ -4,16 +4,7 @@ import { ScoreBadge } from "@/components/ui/score-badge";
 import { useDashboard } from "@/hooks/useDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from "recharts";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 export default function Dashboard() {
   const { monthlyScores, topSuppliers, bottomSuppliers, lowScoreCriteria, stats, isLoading } = useDashboard();
@@ -22,9 +13,7 @@ export default function Dashboard() {
     <div className="space-y-6">
       <div>
         <h1 className="page-title">Dashboard</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Visão geral das qualificações de fornecedores
-        </p>
+        <p className="text-sm text-muted-foreground mt-1">Visão geral das qualificações de fornecedores</p>
       </div>
 
       {/* Monthly Score Evolution Chart - Highlighted */}
@@ -51,15 +40,10 @@ export default function Dashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                <XAxis 
-                  dataKey="month" 
-                  tick={{ fontSize: 12 }} 
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <YAxis 
-                  domain={[0, 100]} 
-                  tick={{ fontSize: 12 }} 
+                <XAxis dataKey="month" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fontSize: 12 }}
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(value) => `${value}%`}
@@ -72,8 +56,18 @@ export default function Dashboard() {
                   }}
                   formatter={(value: number) => [`${value}%`, "Score Médio"]}
                 />
-                <ReferenceLine y={80} stroke="hsl(var(--success))" strokeDasharray="5 5" label={{ value: "Meta 80%", position: "right", fontSize: 10, fill: "hsl(var(--success))" }} />
-                <ReferenceLine y={70} stroke="hsl(var(--warning))" strokeDasharray="5 5" label={{ value: "Mínimo 70%", position: "right", fontSize: 10, fill: "hsl(var(--warning))" }} />
+                <ReferenceLine
+                  y={80}
+                  stroke="hsl(var(--success))"
+                  strokeDasharray="5 5"
+                  label={{ value: "Meta 80%", position: "right", fontSize: 10, fill: "hsl(var(--success))" }}
+                />
+                <ReferenceLine
+                  y={70}
+                  stroke="hsl(var(--warning))"
+                  strokeDasharray="5 5"
+                  label={{ value: "Mínimo 70%", position: "right", fontSize: 10, fill: "hsl(var(--warning))" }}
+                />
                 <Area
                   type="monotone"
                   dataKey="avg_score"
@@ -102,11 +96,6 @@ export default function Dashboard() {
           icon={FileText}
         />
         <StatCard
-          title="Score Médio"
-          value={isLoading ? "-" : `${stats.scoreMedio}%`}
-          icon={TrendingUp}
-        />
-        <StatCard
           title="Fornecedores em Risco"
           value={isLoading ? "-" : stats.fornecedoresRisco.toString()}
           icon={AlertTriangle}
@@ -122,13 +111,9 @@ export default function Dashboard() {
           </div>
           <div className="space-y-3">
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))
+              Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
             ) : topSuppliers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum fornecedor avaliado ainda
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhum fornecedor avaliado ainda</p>
             ) : (
               topSuppliers.map((supplier, index) => (
                 <div
@@ -156,13 +141,9 @@ export default function Dashboard() {
           </div>
           <div className="space-y-3">
             {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))
+              Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)
             ) : bottomSuppliers.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                Nenhum fornecedor em risco
-              </p>
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhum fornecedor em risco</p>
             ) : (
               bottomSuppliers.map((supplier, index) => (
                 <div
@@ -185,9 +166,7 @@ export default function Dashboard() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {isLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-20 w-full" />
-              ))
+              Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)
             ) : lowScoreCriteria.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4 col-span-full">
                 Nenhuma avaliação de critérios ainda

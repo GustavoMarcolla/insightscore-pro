@@ -154,7 +154,10 @@ export default function Fornecedores() {
                         <DropdownMenuItem onClick={() => handleEdit(fornecedor)}>
                           Editar
                         </DropdownMenuItem>
-                        <DropdownMenuItem>Nova Qualificação</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate('/qualificacoes?nova=true')}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Nova Qualificação
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => setFeedbackFornecedor(fornecedor)}>
                           <Mail className="mr-2 h-4 w-4" />

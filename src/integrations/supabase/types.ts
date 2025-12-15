@@ -52,6 +52,143 @@ export type Database = {
           },
         ]
       }
+      documento_anexos: {
+        Row: {
+          created_at: string
+          criterio_id: string | null
+          documento_id: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          criterio_id?: string | null
+          documento_id: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+        }
+        Update: {
+          created_at?: string
+          criterio_id?: string | null
+          documento_id?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_anexos_criterio_id_fkey"
+            columns: ["criterio_id"]
+            isOneToOne: false
+            referencedRelation: "criterios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_anexos_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documento_criterios: {
+        Row: {
+          created_at: string
+          criterio_id: string
+          documento_id: string
+          id: string
+          observacao: string | null
+          score: number
+        }
+        Insert: {
+          created_at?: string
+          criterio_id: string
+          documento_id: string
+          id?: string
+          observacao?: string | null
+          score: number
+        }
+        Update: {
+          created_at?: string
+          criterio_id?: string
+          documento_id?: string
+          id?: string
+          observacao?: string | null
+          score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documento_criterios_criterio_id_fkey"
+            columns: ["criterio_id"]
+            isOneToOne: false
+            referencedRelation: "criterios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documento_criterios_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          data_recebimento: string
+          fornecedor_id: string
+          id: string
+          numero_nf: string | null
+          observacao: string | null
+          serie_nf: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          data_recebimento?: string
+          fornecedor_id: string
+          id?: string
+          numero_nf?: string | null
+          observacao?: string | null
+          serie_nf?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          data_recebimento?: string
+          fornecedor_id?: string
+          id?: string
+          numero_nf?: string | null
+          observacao?: string | null
+          serie_nf?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_fornecedor_id_fkey"
+            columns: ["fornecedor_id"]
+            isOneToOne: false
+            referencedRelation: "fornecedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fornecedor_contatos: {
         Row: {
           created_at: string

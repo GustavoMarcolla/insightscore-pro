@@ -138,7 +138,7 @@ export default function Dashboard() {
         {/* Low Score Criteria */}
         <div className="card-section lg:col-span-2">
           <div className="card-header-section">
-            <h2 className="section-title">Critérios com Menor Score</h2>
+            <h2 className="section-title">CRITÉRIOS COM PIOR SCORE</h2>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {isLoading ? Array.from({

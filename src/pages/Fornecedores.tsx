@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, MoreHorizontal, Mail, Eye } from "lucide-react";
+import { Plus, Search, MoreHorizontal, Mail, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScoreBadge } from "@/components/ui/score-badge";
@@ -97,10 +97,6 @@ export default function Fornecedores() {
               className="pl-10"
             />
           </div>
-          <Button variant="outline">
-            <Filter className="mr-2 h-4 w-4" />
-            Mais Filtros
-          </Button>
         </div>
       </div>
 

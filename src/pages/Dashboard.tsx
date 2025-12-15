@@ -3,9 +3,20 @@ import { StatCard } from "@/components/ui/stat-card";
 import { ScoreBadge } from "@/components/ui/score-badge";
 import { useDashboard } from "@/hooks/useDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  ReferenceLine,
+} from "recharts";
 
 export default function Dashboard() {
-  const { topSuppliers, bottomSuppliers, lowScoreCriteria, stats, isLoading } = useDashboard();
+  const { monthlyScores, topSuppliers, bottomSuppliers, lowScoreCriteria, stats, isLoading } = useDashboard();
 
   return (
     <div className="space-y-6">
@@ -15,6 +26,65 @@ export default function Dashboard() {
           Visão geral das qualificações de fornecedores
         </p>
       </div>
+
+      {/* Monthly Score Evolution Chart - Highlighted */}
+      <Card className="border-2 border-primary/20 bg-gradient-to-br from-card to-primary/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <TrendingUp className="h-5 w-5 text-primary" />
+            Evolução do Score Médio - Últimos 12 Meses
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <Skeleton className="h-64 w-full" />
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={monthlyScores} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                <XAxis 
+                  dataKey="month" 
+                  tick={{ fontSize: 12 }} 
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis 
+                  domain={[0, 100]} 
+                  tick={{ fontSize: 12 }} 
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(value) => `${value}%`}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "8px",
+                  }}
+                  formatter={(value: number) => [`${value}%`, "Score Médio"]}
+                />
+                <ReferenceLine y={80} stroke="hsl(var(--success))" strokeDasharray="5 5" label={{ value: "Meta 80%", position: "right", fontSize: 10, fill: "hsl(var(--success))" }} />
+                <ReferenceLine y={70} stroke="hsl(var(--warning))" strokeDasharray="5 5" label={{ value: "Mínimo 70%", position: "right", fontSize: 10, fill: "hsl(var(--warning))" }} />
+                <Area
+                  type="monotone"
+                  dataKey="avg_score"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  fill="url(#scoreGradient)"
+                  dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

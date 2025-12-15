@@ -286,14 +286,17 @@ Formato: Texto corrido, profissional, sem markdown.`;
 </html>
     `;
 
-    // Send email to all contacts
-    const emailAddresses = contatos.map((c: any) => c.email).filter(Boolean);
-    console.log("Sending email to:", emailAddresses);
+    // In test mode (no verified domain), send only to Resend account email
+    const testEmail = "gustavo.marcolla@senior.com.br";
+    const originalRecipients = contatos.map((c: any) => c.email).filter(Boolean);
+    
+    console.log("Test mode: sending to:", testEmail);
+    console.log("Original recipients would be:", originalRecipients);
 
     await sendEmail(
       RESEND_API_KEY,
-      emailAddresses,
-      `Relatório de Qualificação - ${fornecedor.nome}`,
+      [testEmail],
+      `[TESTE] Relatório de Qualificação - ${fornecedor.nome}`,
       emailHtml
     );
 
@@ -302,8 +305,9 @@ Formato: Texto corrido, profissional, sem markdown.`;
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: `Feedback enviado para ${emailAddresses.length} contato(s)`,
-        recipients: emailAddresses 
+        message: `Feedback enviado para ${testEmail} (modo de teste)`,
+        recipients: [testEmail],
+        originalRecipients 
       }),
       { 
         status: 200, 

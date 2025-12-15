@@ -72,7 +72,7 @@ export default function Qualificacoes() {
       String(d.codigo).includes(search)
   );
 
-  const { sortedItems, sortConfig, requestSort } = useTableSort(filtered, "codigo", "asc");
+  const { sortedItems, sortConfig, requestSort } = useTableSort(filtered, "codigo", "desc");
 
   const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(sortedItems, 10);
   const paginatedItems = getPaginatedItems(currentPage);

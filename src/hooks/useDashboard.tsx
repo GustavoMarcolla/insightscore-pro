@@ -99,7 +99,7 @@ export function useDashboard() {
     },
   });
 
-  // Criteria with lowest average scores
+  // Criteria with lowest average scores (only active criteria)
   const { data: lowScoreCriteria = [], isLoading: loadingCriteria } = useQuery({
     queryKey: ["dashboard", "low-score-criteria"],
     queryFn: async () => {
@@ -108,8 +108,9 @@ export function useDashboard() {
         .select(`
           criterio_id,
           score,
-          criterios!inner(id, descricao)
-        `);
+          criterios!inner(id, descricao, situacao)
+        `)
+        .eq("criterios.situacao", "ativo");
 
       if (error) throw error;
 

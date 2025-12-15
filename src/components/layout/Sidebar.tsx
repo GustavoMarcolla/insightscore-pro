@@ -27,11 +27,20 @@ const navItems = [
 export function Sidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, unifiedUser, isInIframe } = useAuth();
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
 
   const handleLogout = async () => {
+    // Se está em iframe (Senior X), não faz logout tradicional
+    if (isInIframe) {
+      toast({
+        title: "Sessão Senior X",
+        description: "Para sair, feche a aplicação na plataforma Senior X",
+      });
+      return;
+    }
+
     const { error } = await signOut();
     if (error) {
       toast({
@@ -106,8 +115,16 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* Logout */}
+      {/* User Info & Logout */}
       <div className="border-t border-sidebar-muted/20 p-2">
+        {expanded && unifiedUser && (
+          <div className="px-3 py-2 mb-2">
+            <p className="text-xs text-sidebar-muted truncate">{unifiedUser.fullName || unifiedUser.email}</p>
+            {unifiedUser.authProvider === 'seniorx' && (
+              <span className="text-[10px] text-brand-teal">Senior X</span>
+            )}
+          </div>
+        )}
         <button
           onClick={handleLogout}
           className={cn(

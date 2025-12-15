@@ -534,7 +534,7 @@ function CriterioCard({
                   "h-6 w-6 transition-colors",
                   star <= (avaliacao?.score || 0)
                     ? "fill-warning text-warning"
-                    : "text-muted hover:text-warning"
+                    : "text-muted-foreground/40 hover:text-warning"
                 )}
               />
             </button>

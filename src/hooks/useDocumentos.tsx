@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export interface Documento {
   id: string;
+  codigo: number;
   fornecedor_id: string;
   data_recebimento: string;
   serie_nf: string | null;
@@ -63,10 +64,20 @@ export function useDocumentos() {
       const { data, error } = await supabase
         .from("documentos")
         .select(`
-          *,
+          id,
+          codigo,
+          fornecedor_id,
+          data_recebimento,
+          serie_nf,
+          numero_nf,
+          observacao,
+          status,
+          created_at,
+          updated_at,
+          created_by,
           fornecedores (nome, codigo)
         `)
-        .order("created_at", { ascending: false });
+        .order("codigo", { ascending: false });
 
       if (error) throw error;
       
@@ -112,6 +123,29 @@ export function useDocumentos() {
     },
     onError: (error: Error) => {
       toast({ variant: "destructive", title: "Erro ao atualizar documento", description: error.message });
+    },
+  });
+
+  const deleteDocumentoMutation = useMutation({
+    mutationFn: async (id: string) => {
+      // First delete related records
+      await supabase.from("documento_criterios").delete().eq("documento_id", id);
+      await supabase.from("documento_anexos").delete().eq("documento_id", id);
+      
+      const { error } = await supabase
+        .from("documentos")
+        .delete()
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["documentos"] });
+      queryClient.invalidateQueries({ queryKey: ["fornecedores"] });
+      toast({ title: "Qualificação excluída com sucesso" });
+    },
+    onError: (error: Error) => {
+      toast({ variant: "destructive", title: "Erro ao excluir qualificação", description: error.message });
     },
   });
 
@@ -197,6 +231,7 @@ export function useDocumentos() {
     error,
     createDocumento: createDocumentoMutation.mutateAsync,
     updateDocumento: updateDocumentoMutation.mutate,
+    deleteDocumento: deleteDocumentoMutation.mutate,
     saveCriterios: saveCriteriosMutation.mutateAsync,
     uploadAnexo: uploadAnexoMutation.mutateAsync,
     getAnexos,
@@ -204,5 +239,6 @@ export function useDocumentos() {
     isCreating: createDocumentoMutation.isPending,
     isSaving: saveCriteriosMutation.isPending,
     isUploading: uploadAnexoMutation.isPending,
+    isDeleting: deleteDocumentoMutation.isPending,
   };
 }

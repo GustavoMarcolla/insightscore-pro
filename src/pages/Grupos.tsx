@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { useTableSort } from "@/hooks/useTableSort";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,7 +48,9 @@ export default function Grupos() {
       g.codigo.toLowerCase().includes(search.toLowerCase())
   );
 
-  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(filtered, 10);
+  const { sortedItems, sortConfig, requestSort } = useTableSort(filtered, "codigo", "asc");
+
+  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(sortedItems, 10);
   const paginatedItems = getPaginatedItems(currentPage);
 
   // Reset to page 1 when filter changes
@@ -109,10 +113,40 @@ export default function Grupos() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50">
-              <TableHead className="font-semibold">Código</TableHead>
-              <TableHead className="font-semibold">Descrição</TableHead>
-              <TableHead className="font-semibold text-center">Critérios</TableHead>
-              <TableHead className="font-semibold text-center">Situação</TableHead>
+              <SortableTableHead
+                sortKey="codigo"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof GrupoWithCount)}
+              >
+                Código
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="descricao"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof GrupoWithCount)}
+              >
+                Descrição
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="criterios_count"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof GrupoWithCount)}
+                className="text-center"
+              >
+                Critérios
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="situacao"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof GrupoWithCount)}
+                className="text-center"
+              >
+                Situação
+              </SortableTableHead>
               <TableHead className="font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

@@ -12,6 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { useTableSort } from "@/hooks/useTableSort";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +52,9 @@ export default function Fornecedores() {
       f.cnpj.includes(search)
   );
 
-  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(filtered, 10);
+  const { sortedItems, sortConfig, requestSort } = useTableSort(filtered, "codigo", "asc");
+
+  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(sortedItems, 10);
   const paginatedItems = getPaginatedItems(currentPage);
 
   // Reset to page 1 when filter changes
@@ -115,11 +119,48 @@ export default function Fornecedores() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50">
-              <TableHead className="font-semibold">Código</TableHead>
-              <TableHead className="font-semibold">Nome</TableHead>
-              <TableHead className="font-semibold">CNPJ</TableHead>
-              <TableHead className="font-semibold text-center">Avaliações</TableHead>
-              <TableHead className="font-semibold text-center">Score</TableHead>
+              <SortableTableHead
+                sortKey="codigo"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof Fornecedor)}
+              >
+                Código
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="nome"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof Fornecedor)}
+              >
+                Nome
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="cnpj"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof Fornecedor)}
+              >
+                CNPJ
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="total_avaliacoes"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof Fornecedor)}
+                className="text-center"
+              >
+                Avaliações
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="score_atual"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof Fornecedor)}
+                className="text-center"
+              >
+                Score
+              </SortableTableHead>
               <TableHead className="font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

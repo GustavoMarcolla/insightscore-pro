@@ -35,11 +35,13 @@ import { useDocumentos } from "@/hooks/useDocumentos";
 import { QualificacaoWizard } from "@/components/qualificacao/QualificacaoWizard";
 import { ContinuarAvaliacaoWizard } from "@/components/qualificacao/ContinuarAvaliacaoWizard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TablePagination, usePagination } from "@/components/ui/table-pagination";
 
 export default function Qualificacoes() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [continuarOpen, setContinuarOpen] = useState(false);
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<string | null>(null);
@@ -67,6 +69,14 @@ export default function Qualificacoes() {
       d.serie_nf?.includes(search) ||
       String(d.codigo).includes(search)
   );
+
+  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(filtered, 10);
+  const paginatedItems = getPaginatedItems(currentPage);
+
+  // Reset to page 1 when filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search]);
 
   const handleContinuar = (documentoId: string) => {
     setSelectedDocumentoId(documentoId);
@@ -153,7 +163,7 @@ export default function Qualificacoes() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((doc) => (
+              paginatedItems.map((doc) => (
                 <TableRow key={doc.id} className="h-12">
                   <TableCell>
                     <span className="font-mono text-sm font-medium text-primary">
@@ -225,6 +235,13 @@ export default function Qualificacoes() {
             )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       <QualificacaoWizard

@@ -171,26 +171,17 @@ serve(async (req) => {
     console.log("Lowest scoring criteria:", lowestCriteria);
 
     // Generate AI suggestions
-    const prompt = `Você é um consultor de qualidade para fornecedores industriais. 
-Analise os critérios de avaliação abaixo que obtiveram os menores scores e gere sugestões de melhoria práticas e específicas para cada um.
+    const prompt = `Você é um consultor de qualidade. Gere um feedback CURTO e DIRETO para o fornecedor "${fornecedor.nome}" (score: ${Math.round(fornecedor.score_atual || 0)}%).
 
-Fornecedor: ${fornecedor.nome}
-Score geral atual: ${Math.round(fornecedor.score_atual || 0)}%
+Critérios com menor pontuação:
+${lowestCriteria.map(c => `- ${c.descricao}: ${c.avgScore.toFixed(1)}/5`).join("\n")}
 
-Critérios com menor pontuação (score de 0 a 5):
-${lowestCriteria.map(c => `
-- ${c.descricao} (Código: ${c.codigo})
-  Score médio: ${c.avgScore.toFixed(1)}/5
-  Observações registradas: ${c.observacoes.length > 0 ? c.observacoes.join("; ") : "Nenhuma"}
-`).join("")}
+Gere um texto em português brasileiro com MÁXIMO 150 palavras contendo:
+- Saudação breve
+- Para cada critério, UMA sugestão de melhoria objetiva
+- Mensagem final de incentivo
 
-Gere um texto profissional de feedback em português brasileiro com:
-1. Uma saudação cordial
-2. Um resumo do desempenho geral
-3. Para cada critério listado, forneça 2-3 sugestões de melhoria específicas e práticas
-4. Uma mensagem de incentivo final
-
-Formato: Texto corrido, profissional, sem markdown.`;
+Seja direto e prático. Sem markdown, texto corrido.`;
 
     console.log("Calling Lovable AI for suggestions...");
     

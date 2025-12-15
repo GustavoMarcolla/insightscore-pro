@@ -39,6 +39,7 @@ interface QualificacaoWizardProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   fornecedorPreSelected?: Fornecedor | null;
+  preselectedFornecedorId?: string;
 }
 
 interface CriterioAvaliacao {
@@ -53,7 +54,7 @@ const Step1Schema = z.object({
   data_recebimento: z.date({ required_error: "Selecione a data de recebimento" }),
 });
 
-export function QualificacaoWizard({ open, onOpenChange, fornecedorPreSelected }: QualificacaoWizardProps) {
+export function QualificacaoWizard({ open, onOpenChange, fornecedorPreSelected, preselectedFornecedorId }: QualificacaoWizardProps) {
   const [step, setStep] = useState(1);
   const [fornecedorId, setFornecedorId] = useState("");
   const [dataRecebimento, setDataRecebimento] = useState<Date>(new Date());
@@ -78,8 +79,10 @@ export function QualificacaoWizard({ open, onOpenChange, fornecedorPreSelected }
   useEffect(() => {
     if (fornecedorPreSelected) {
       setFornecedorId(fornecedorPreSelected.id);
+    } else if (preselectedFornecedorId) {
+      setFornecedorId(preselectedFornecedorId);
     }
-  }, [fornecedorPreSelected]);
+  }, [fornecedorPreSelected, preselectedFornecedorId]);
 
   useEffect(() => {
     if (open) {

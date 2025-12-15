@@ -1,5 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { startOfMonth, subMonths, format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface SupplierRanking {
   id: string;
@@ -13,6 +15,11 @@ interface CriterioStats {
   avg_score: number;
 }
 
+interface MonthlyScore {
+  month: string;
+  avg_score: number;
+}
+
 interface DashboardStats {
   totalFornecedores: number;
   qualificacoesMes: number;
@@ -21,6 +28,42 @@ interface DashboardStats {
 }
 
 export function useDashboard() {
+  // Monthly score evolution for last 12 months
+  const { data: monthlyScores = [], isLoading: loadingMonthly } = useQuery({
+    queryKey: ["dashboard", "monthly-scores"],
+    queryFn: async () => {
+      const months: MonthlyScore[] = [];
+      const now = new Date();
+
+      for (let i = 11; i >= 0; i--) {
+        const monthStart = startOfMonth(subMonths(now, i));
+        const monthEnd = startOfMonth(subMonths(now, i - 1));
+
+        const { data } = await supabase
+          .from("documento_criterios")
+          .select(`
+            score,
+            documentos!inner(created_at, status)
+          `)
+          .gte("documentos.created_at", monthStart.toISOString())
+          .lt("documentos.created_at", monthEnd.toISOString())
+          .eq("documentos.status", "concluido");
+
+        const scores = (data || []).map((d: any) => d.score);
+        const avg = scores.length > 0
+          ? Math.round((scores.reduce((a: number, b: number) => a + b, 0) / scores.length) * 20)
+          : 0;
+
+        months.push({
+          month: format(monthStart, "MMM/yy", { locale: ptBR }),
+          avg_score: avg,
+        });
+      }
+
+      return months;
+    },
+  });
+
   // Top 5 suppliers by score
   const { data: topSuppliers = [], isLoading: loadingTop } = useQuery({
     queryKey: ["dashboard", "top-suppliers"],
@@ -150,6 +193,7 @@ export function useDashboard() {
   });
 
   return {
+    monthlyScores,
     topSuppliers,
     bottomSuppliers,
     lowScoreCriteria,
@@ -159,6 +203,6 @@ export function useDashboard() {
       scoreMedio: 0,
       fornecedoresRisco: 0,
     },
-    isLoading: loadingTop || loadingBottom || loadingCriteria || loadingStats,
+    isLoading: loadingMonthly || loadingTop || loadingBottom || loadingCriteria || loadingStats,
   };
 }

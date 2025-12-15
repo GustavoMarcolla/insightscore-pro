@@ -1,13 +1,29 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 
 // Constantes
-const SENIOR_X_ORIGIN = 'https://platform.senior.com.br';
+const SENIOR_X_ORIGINS = [
+  'https://platform.senior.com.br',
+  'https://cloud-leaf.senior.com.br',
+];
+const SENIOR_DOMAIN_PATTERN = /\.senior\.com\.br$/;
 const STORAGE_KEY_USER = 'senior_user';
 const STORAGE_KEY_TOKEN = 'senior_token';
 const STORAGE_KEY_SENIOR_MODE = 'senior_mode';
 
 // Debug: evita spam de logs para origens desconhecidas
 const seenMessageOrigins = new Set<string>();
+
+/**
+ * Verifica se a origem é de um domínio Senior válido
+ */
+function isSeniorOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin);
+    return SENIOR_DOMAIN_PATTERN.test(url.hostname) || SENIOR_X_ORIGINS.includes(origin);
+  } catch {
+    return false;
+  }
+}
 
 // Interface do usuário Senior X
 export interface SeniorUser {
@@ -127,7 +143,8 @@ export function useSeniorX() {
     const isInIframe = window.self !== window.top;
 
     // Heurística para identificar Senior X sem depender de receber mensagem
-    const likelySenior = isInIframe && document.referrer.includes('platform.senior.com.br');
+    // Aceita qualquer domínio *.senior.com.br como referrer
+    const likelySenior = isInIframe && SENIOR_DOMAIN_PATTERN.test(new URL(document.referrer || 'http://localhost').hostname);
     setIsLikelySeniorX(likelySenior);
 
     // Fora de iframe, nunca devemos ficar em "modo Senior X" (isso quebra o logout normal)
@@ -167,11 +184,8 @@ export function useSeniorX() {
     }
 
     const handleMessage = (event: MessageEvent) => {
-      const isAllowedOrigin =
-        event.origin === SENIOR_X_ORIGIN ||
-        (event.origin.endsWith('.senior.com.br') && event.origin.includes('platform'));
-
-      if (!isAllowedOrigin) {
+      // Aceita qualquer domínio *.senior.com.br
+      if (!isSeniorOrigin(event.origin)) {
         if (!seenMessageOrigins.has(event.origin)) {
           console.log('[SeniorX] Mensagem ignorada (origem diferente):', event.origin);
           seenMessageOrigins.add(event.origin);

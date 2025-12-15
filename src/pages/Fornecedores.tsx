@@ -17,19 +17,24 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-// Mock data
-const fornecedores = [
-  { id: "1", codigo: "FOR001", nome: "Fornecedor Alpha Ltda", cnpj: "12.345.678/0001-90", score: 95, avaliacoes: 24 },
-  { id: "2", codigo: "FOR002", nome: "Tech Solutions S.A.", cnpj: "23.456.789/0001-01", score: 92, avaliacoes: 18 },
-  { id: "3", codigo: "FOR003", nome: "Industrial Parts Co.", cnpj: "34.567.890/0001-12", score: 88, avaliacoes: 32 },
-  { id: "4", codigo: "FOR004", nome: "Quality Materials", cnpj: "45.678.901/0001-23", score: 75, avaliacoes: 15 },
-  { id: "5", codigo: "FOR005", nome: "Express Delivery Inc.", cnpj: "56.789.012/0001-34", score: 68, avaliacoes: 21 },
-  { id: "6", codigo: "FOR006", nome: "Basic Supplies", cnpj: "67.890.123/0001-45", score: 55, avaliacoes: 12 },
-];
+import { useFornecedores, Fornecedor } from "@/hooks/useFornecedores";
+import { FornecedorModal } from "@/components/modals/FornecedorModal";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Fornecedores() {
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null);
+
+  const { 
+    fornecedores, 
+    isLoading, 
+    createFornecedor, 
+    updateFornecedor, 
+    toggleSituacao,
+    isCreating,
+    isUpdating 
+  } = useFornecedores();
 
   const filtered = fornecedores.filter(
     (f) =>
@@ -37,6 +42,25 @@ export default function Fornecedores() {
       f.codigo.toLowerCase().includes(search.toLowerCase()) ||
       f.cnpj.includes(search)
   );
+
+  const handleSave = (data: { id?: string; codigo: string; nome: string; cnpj: string; endereco?: string }) => {
+    if (data.id) {
+      updateFornecedor(data as { id: string; codigo: string; nome: string; cnpj: string; endereco?: string });
+    } else {
+      createFornecedor({ codigo: data.codigo, nome: data.nome, cnpj: data.cnpj, endereco: data.endereco });
+    }
+    setEditingFornecedor(null);
+  };
+
+  const handleEdit = (fornecedor: Fornecedor) => {
+    setEditingFornecedor(fornecedor);
+    setModalOpen(true);
+  };
+
+  const handleNew = () => {
+    setEditingFornecedor(null);
+    setModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -47,7 +71,7 @@ export default function Fornecedores() {
             Gerencie os fornecedores cadastrados
           </p>
         </div>
-        <Button>
+        <Button onClick={handleNew}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Fornecedor
         </Button>
@@ -89,46 +113,72 @@ export default function Fornecedores() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((fornecedor) => (
-              <TableRow key={fornecedor.id} className="h-12">
-                <TableCell className="font-medium text-primary">
-                  {fornecedor.codigo}
-                </TableCell>
-                <TableCell>{fornecedor.nome}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {fornecedor.cnpj}
-                </TableCell>
-                <TableCell className="text-center">{fornecedor.avaliacoes}</TableCell>
-                <TableCell className="text-center">
-                  <ScoreBadge score={fornecedor.score} size="sm" />
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Visualizar</DropdownMenuItem>
-                      <DropdownMenuItem>Editar</DropdownMenuItem>
-                      <DropdownMenuItem>Nova Qualificação</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        Inativar
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell className="text-center"><Skeleton className="h-4 w-8 mx-auto" /></TableCell>
+                  <TableCell className="text-center"><Skeleton className="h-6 w-12 mx-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : (
+              filtered.map((fornecedor) => (
+                <TableRow key={fornecedor.id} className="h-12">
+                  <TableCell className="font-medium text-primary">
+                    {fornecedor.codigo}
+                  </TableCell>
+                  <TableCell>{fornecedor.nome}</TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {fornecedor.cnpj}
+                  </TableCell>
+                  <TableCell className="text-center">{fornecedor.total_avaliacoes}</TableCell>
+                  <TableCell className="text-center">
+                    <ScoreBadge score={Number(fornecedor.score_atual)} size="sm" />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>Visualizar</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(fornecedor)}>
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>Nova Qualificação</DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => toggleSituacao({ id: fornecedor.id, situacao: fornecedor.situacao })}
+                          className="text-destructive"
+                        >
+                          {fornecedor.situacao === "ativo" ? "Inativar" : "Ativar"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
-        {filtered.length === 0 && (
+        {!isLoading && filtered.length === 0 && (
           <div className="py-12 text-center text-muted-foreground">
             Nenhum fornecedor encontrado
           </div>
         )}
       </div>
+
+      <FornecedorModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        fornecedor={editingFornecedor}
+        onSave={handleSave}
+        isLoading={isCreating || isUpdating}
+      />
     </div>
   );
 }

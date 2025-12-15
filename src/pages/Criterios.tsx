@@ -24,31 +24,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Mock data
-const criterios = [
-  { id: "1", codigo: "CRT001", descricao: "Qualidade do Produto", grupo: "Matéria Prima", situacao: "ativo" },
-  { id: "2", codigo: "CRT002", descricao: "Prazo de Entrega", grupo: "Matéria Prima", situacao: "ativo" },
-  { id: "3", codigo: "CRT003", descricao: "Documentação Completa", grupo: "Matéria Prima", situacao: "ativo" },
-  { id: "4", codigo: "CRT004", descricao: "Embalagem Adequada", grupo: "Matéria Prima", situacao: "ativo" },
-  { id: "5", codigo: "CRT005", descricao: "Atendimento ao Chamado", grupo: "Serviços de Manutenção", situacao: "ativo" },
-  { id: "6", codigo: "CRT006", descricao: "Tempo de Resposta", grupo: "Serviços de Manutenção", situacao: "ativo" },
-  { id: "7", codigo: "CRT007", descricao: "Conformidade com Especificação", grupo: "Embalagens", situacao: "inativo" },
-];
-
-const grupos = ["Todos", "Matéria Prima", "Serviços de Manutenção", "Embalagens"];
+import { useCriterios, CriterioWithGrupo } from "@/hooks/useCriterios";
+import { useGrupos } from "@/hooks/useGrupos";
+import { CriterioModal } from "@/components/modals/CriterioModal";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Criterios() {
   const [search, setSearch] = useState("");
   const [grupoFilter, setGrupoFilter] = useState("Todos");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingCriterio, setEditingCriterio] = useState<CriterioWithGrupo | null>(null);
+
+  const { 
+    criterios, 
+    isLoading, 
+    createCriterio, 
+    updateCriterio, 
+    toggleSituacao,
+    isCreating,
+    isUpdating 
+  } = useCriterios();
+
+  const { grupos } = useGrupos();
+
+  const gruposOptions = ["Todos", ...new Set(criterios.map((c) => c.grupo_descricao).filter(Boolean))];
 
   const filtered = criterios.filter((c) => {
     const matchSearch =
       c.descricao.toLowerCase().includes(search.toLowerCase()) ||
       c.codigo.toLowerCase().includes(search.toLowerCase());
-    const matchGrupo = grupoFilter === "Todos" || c.grupo === grupoFilter;
+    const matchGrupo = grupoFilter === "Todos" || c.grupo_descricao === grupoFilter;
     return matchSearch && matchGrupo;
   });
+
+  const handleSave = (data: { id?: string; codigo: string; descricao: string; grupo_id?: string }) => {
+    if (data.id) {
+      updateCriterio(data as { id: string; codigo: string; descricao: string; grupo_id?: string });
+    } else {
+      createCriterio({ codigo: data.codigo, descricao: data.descricao, grupo_id: data.grupo_id });
+    }
+    setEditingCriterio(null);
+  };
+
+  const handleEdit = (criterio: CriterioWithGrupo) => {
+    setEditingCriterio(criterio);
+    setModalOpen(true);
+  };
+
+  const handleNew = () => {
+    setEditingCriterio(null);
+    setModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -59,7 +85,7 @@ export default function Criterios() {
             Defina os critérios de avaliação dos fornecedores
           </p>
         </div>
-        <Button>
+        <Button onClick={handleNew}>
           <Plus className="mr-2 h-4 w-4" />
           Novo Critério
         </Button>
@@ -85,8 +111,8 @@ export default function Criterios() {
               <SelectValue placeholder="Grupo" />
             </SelectTrigger>
             <SelectContent>
-              {grupos.map((g) => (
-                <SelectItem key={g} value={g}>
+              {gruposOptions.map((g) => (
+                <SelectItem key={g} value={g as string}>
                   {g}
                 </SelectItem>
               ))}
@@ -108,57 +134,83 @@ export default function Criterios() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((criterio) => (
-              <TableRow key={criterio.id} className="h-12">
-                <TableCell className="font-medium text-primary">
-                  {criterio.codigo}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <ListChecks className="h-4 w-4 text-muted-foreground" />
-                    {criterio.descricao}
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {criterio.grupo}
-                </TableCell>
-                <TableCell className="text-center">
-                  <Badge
-                    variant={criterio.situacao === "ativo" ? "default" : "secondary"}
-                    className={
-                      criterio.situacao === "ativo"
-                        ? "bg-success text-success-foreground"
-                        : ""
-                    }
-                  >
-                    {criterio.situacao === "ativo" ? "Ativo" : "Inativo"}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>Editar</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        {criterio.situacao === "ativo" ? "Inativar" : "Ativar"}
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-40" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell className="text-center"><Skeleton className="h-6 w-16 mx-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                </TableRow>
+              ))
+            ) : (
+              filtered.map((criterio) => (
+                <TableRow key={criterio.id} className="h-12">
+                  <TableCell className="font-medium text-primary">
+                    {criterio.codigo}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <ListChecks className="h-4 w-4 text-muted-foreground" />
+                      {criterio.descricao}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {criterio.grupo_descricao || "-"}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge
+                      variant={criterio.situacao === "ativo" ? "default" : "secondary"}
+                      className={
+                        criterio.situacao === "ativo"
+                          ? "bg-success text-success-foreground"
+                          : ""
+                      }
+                    >
+                      {criterio.situacao === "ativo" ? "Ativo" : "Inativo"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEdit(criterio)}>
+                          Editar
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => toggleSituacao({ id: criterio.id, situacao: criterio.situacao })}
+                          className="text-destructive"
+                        >
+                          {criterio.situacao === "ativo" ? "Inativar" : "Ativar"}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
-        {filtered.length === 0 && (
+        {!isLoading && filtered.length === 0 && (
           <div className="py-12 text-center text-muted-foreground">
             Nenhum critério encontrado
           </div>
         )}
       </div>
+
+      <CriterioModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        criterio={editingCriterio}
+        grupos={grupos}
+        onSave={handleSave}
+        isLoading={isCreating || isUpdating}
+      />
     </div>
   );
 }

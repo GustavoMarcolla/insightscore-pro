@@ -94,7 +94,7 @@ export default function Dashboard() {
         {/* Top Suppliers */}
         <div className="card-section">
           <div className="card-header-section">
-            <h2 className="section-title">FORNECEDORES MELHOR RANQUEADOS</h2>
+            <h2 className="section-title">FORNECEDORES COM MELHOR SCORE</h2>
           </div>
           <div className="space-y-3">
             {isLoading ? Array.from({
@@ -116,7 +116,7 @@ export default function Dashboard() {
         {/* Bottom Suppliers */}
         <div className="card-section">
           <div className="card-header-section">
-            <h2 className="section-title">Fornecedores em Risco</h2>
+            <h2 className="section-title">FORNECEDORES COM PIOR SCORE</h2>
           </div>
           <div className="space-y-3">
             {isLoading ? Array.from({

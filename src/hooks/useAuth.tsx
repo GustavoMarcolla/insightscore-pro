@@ -20,6 +20,7 @@ export function useAuth() {
   const {
     seniorUser,
     isSeniorXMode,
+    isLikelySeniorX,
     isLoading: seniorLoading,
     isAuthenticated: seniorAuthenticated,
     clearSeniorAuth,
@@ -119,7 +120,7 @@ export function useAuth() {
   const isAuthenticated = !!(user || (seniorAuthenticated && seniorUser));
   
   // Loading considera ambos os sistemas
-  const isLoading = isSeniorXMode ? seniorLoading : loading;
+  const isLoading = (isLikelySeniorX || isSeniorXMode) ? seniorLoading : loading;
 
   return {
     user,
@@ -133,6 +134,7 @@ export function useAuth() {
     seniorUser,
     seniorAuthenticated,
     isSeniorXMode,
+    isLikelySeniorX,
     isAuthenticated,
     unifiedUser: getUnifiedUser(),
   };

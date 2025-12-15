@@ -45,10 +45,13 @@ export default function Qualificacoes() {
   const [selectedDocumentoId, setSelectedDocumentoId] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [documentoToDelete, setDocumentoToDelete] = useState<string | null>(null);
+  const [preselectedFornecedor, setPreselectedFornecedor] = useState<string | undefined>();
 
   // Open wizard if coming from fornecedores with ?nova=true
   useEffect(() => {
     if (searchParams.get('nova') === 'true') {
+      const fornecedorId = searchParams.get('fornecedor') || undefined;
+      setPreselectedFornecedor(fornecedorId);
       setWizardOpen(true);
       setSearchParams({}, { replace: true });
     }
@@ -226,7 +229,11 @@ export default function Qualificacoes() {
 
       <QualificacaoWizard
         open={wizardOpen}
-        onOpenChange={setWizardOpen}
+        onOpenChange={(open) => {
+          setWizardOpen(open);
+          if (!open) setPreselectedFornecedor(undefined);
+        }}
+        preselectedFornecedorId={preselectedFornecedor}
       />
 
       {selectedDocumentoId && (

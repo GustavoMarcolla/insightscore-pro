@@ -491,10 +491,10 @@ export default function FornecedorDetalhes() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 12 }} />
                   <YAxis
-                    dataKey="codigo"
+                    dataKey="descricao"
                     type="category"
                     tick={{ fontSize: 11 }}
-                    width={60}
+                    width={120}
                   />
                   <Tooltip
                     contentStyle={{

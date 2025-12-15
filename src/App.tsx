@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -25,13 +26,15 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
-          <Route element={<AppLayout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/fornecedores" element={<Fornecedores />} />
-            <Route path="/grupos" element={<Grupos />} />
-            <Route path="/criterios" element={<Criterios />} />
-            <Route path="/qualificacoes" element={<Qualificacoes />} />
-            <Route path="/configuracoes" element={<Configuracoes />} />
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AppLayout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/fornecedores" element={<Fornecedores />} />
+              <Route path="/grupos" element={<Grupos />} />
+              <Route path="/criterios" element={<Criterios />} />
+              <Route path="/qualificacoes" element={<Qualificacoes />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+            </Route>
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

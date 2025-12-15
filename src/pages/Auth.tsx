@@ -1,12 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { z } from "zod";
 
 type AuthMode = "login" | "register" | "forgot";
+
+const loginSchema = z.object({
+  email: z.string().email({ message: "E-mail inválido" }),
+  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
+});
+
+const registerSchema = z.object({
+  name: z.string().min(2, { message: "Nome deve ter pelo menos 2 caracteres" }),
+  email: z.string().email({ message: "E-mail inválido" }),
+  password: z.string().min(6, { message: "Senha deve ter pelo menos 6 caracteres" }),
+});
+
+const forgotSchema = z.object({
+  email: z.string().email({ message: "E-mail inválido" }),
+});
 
 export default function Auth() {
   const [mode, setMode] = useState<AuthMode>("login");
@@ -15,37 +32,139 @@ export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn, signUp, resetPassword, user, loading } = useAuth();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard", { replace: true });
+    }
+  }, [user, loading, navigate]);
+
+  const clearErrors = () => setErrors({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearErrors();
     setIsLoading(true);
 
-    // TODO: Implement actual auth with Supabase
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
       if (mode === "login") {
-        toast({
-          title: "Login realizado",
-          description: "Bem-vindo ao Qualifica+",
-        });
-        navigate("/dashboard");
+        const validation = loginSchema.safeParse({ email, password });
+        if (!validation.success) {
+          const fieldErrors: Record<string, string> = {};
+          validation.error.errors.forEach((err) => {
+            if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
+          });
+          setErrors(fieldErrors);
+          setIsLoading(false);
+          return;
+        }
+
+        const { error } = await signIn(email, password);
+        if (error) {
+          if (error.message.includes("Invalid login credentials")) {
+            toast({
+              variant: "destructive",
+              title: "Erro ao entrar",
+              description: "E-mail ou senha incorretos",
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Erro ao entrar",
+              description: error.message,
+            });
+          }
+        } else {
+          toast({
+            title: "Login realizado",
+            description: "Bem-vindo ao Qualifica+",
+          });
+          navigate("/dashboard");
+        }
       } else if (mode === "register") {
-        toast({
-          title: "Conta criada",
-          description: "Verifique seu e-mail para confirmar o cadastro",
-        });
-        setMode("login");
-      } else {
-        toast({
-          title: "E-mail enviado",
-          description: "Verifique sua caixa de entrada para redefinir a senha",
-        });
-        setMode("login");
+        const validation = registerSchema.safeParse({ name, email, password });
+        if (!validation.success) {
+          const fieldErrors: Record<string, string> = {};
+          validation.error.errors.forEach((err) => {
+            if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
+          });
+          setErrors(fieldErrors);
+          setIsLoading(false);
+          return;
+        }
+
+        const { error } = await signUp(email, password, name);
+        if (error) {
+          if (error.message.includes("already registered")) {
+            toast({
+              variant: "destructive",
+              title: "Erro ao criar conta",
+              description: "Este e-mail já está cadastrado",
+            });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Erro ao criar conta",
+              description: error.message,
+            });
+          }
+        } else {
+          toast({
+            title: "Conta criada com sucesso",
+            description: "Você já pode acessar o sistema",
+          });
+          navigate("/dashboard");
+        }
+      } else if (mode === "forgot") {
+        const validation = forgotSchema.safeParse({ email });
+        if (!validation.success) {
+          const fieldErrors: Record<string, string> = {};
+          validation.error.errors.forEach((err) => {
+            if (err.path[0]) fieldErrors[err.path[0] as string] = err.message;
+          });
+          setErrors(fieldErrors);
+          setIsLoading(false);
+          return;
+        }
+
+        const { error } = await resetPassword(email);
+        if (error) {
+          toast({
+            variant: "destructive",
+            title: "Erro ao recuperar senha",
+            description: error.message,
+          });
+        } else {
+          toast({
+            title: "E-mail enviado",
+            description: "Verifique sua caixa de entrada para redefinir a senha",
+          });
+          setMode("login");
+        }
       }
-    }, 1000);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Erro inesperado",
+        description: "Tente novamente mais tarde",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -115,10 +234,12 @@ export default function Auth() {
                     placeholder="Seu nome"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="pl-10"
-                    required
+                    className={`pl-10 ${errors.name ? "border-destructive" : ""}`}
                   />
                 </div>
+                {errors.name && (
+                  <p className="text-sm text-destructive">{errors.name}</p>
+                )}
               </div>
             )}
 
@@ -134,10 +255,12 @@ export default function Auth() {
                   placeholder="seu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
+                  className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
                 />
               </div>
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email}</p>
+              )}
             </div>
 
             {mode !== "forgot" && (
@@ -153,8 +276,7 @@ export default function Auth() {
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 pr-10"
-                    required
+                    className={`pl-10 pr-10 ${errors.password ? "border-destructive" : ""}`}
                   />
                   <button
                     type="button"
@@ -168,6 +290,9 @@ export default function Auth() {
                     )}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
               </div>
             )}
 
@@ -201,7 +326,10 @@ export default function Auth() {
               <p className="text-muted-foreground">
                 Não tem uma conta?{" "}
                 <button
-                  onClick={() => setMode("register")}
+                  onClick={() => {
+                    setMode("register");
+                    clearErrors();
+                  }}
                   className="text-primary hover:underline"
                 >
                   Cadastre-se
@@ -212,7 +340,10 @@ export default function Auth() {
               <p className="text-muted-foreground">
                 Já tem uma conta?{" "}
                 <button
-                  onClick={() => setMode("login")}
+                  onClick={() => {
+                    setMode("login");
+                    clearErrors();
+                  }}
                   className="text-primary hover:underline"
                 >
                   Entrar

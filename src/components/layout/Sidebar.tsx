@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
@@ -9,7 +9,8 @@ import {
   LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
   { icon: Users, label: "Fornecedores", href: "/fornecedores" },
@@ -21,6 +22,22 @@ const navItems = [
 
 export function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    const { error } = await signOut();
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro ao sair",
+        description: error.message,
+      });
+    } else {
+      navigate("/auth");
+    }
+  };
 
   return (
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-sidebar flex-col bg-sidebar">
@@ -67,6 +84,7 @@ export function Sidebar() {
       {/* Logout */}
       <div className="border-t border-sidebar-muted/20 p-2">
         <button
+          onClick={handleLogout}
           className="flex w-full flex-col items-center justify-center rounded-md py-3 text-sidebar-muted transition-colors hover:bg-sidebar-muted/10 hover:text-sidebar-foreground"
           title="Sair"
         >

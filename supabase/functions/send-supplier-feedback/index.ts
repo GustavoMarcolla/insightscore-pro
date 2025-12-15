@@ -76,11 +76,11 @@ serve(async (req) => {
       throw new Error("Fornecedor não possui contatos com email cadastrado");
     }
 
-    // Get qualifications from last month
+    // First try to get qualifications from last month
     const lastMonth = new Date();
     lastMonth.setMonth(lastMonth.getMonth() - 1);
 
-    const { data: documentos } = await supabase
+    let { data: documentos } = await supabase
       .from("documentos")
       .select(`
         id,
@@ -100,9 +100,42 @@ serve(async (req) => {
       .eq("status", "concluido")
       .gte("created_at", lastMonth.toISOString());
 
+    let periodLabel = "último mês";
+
+    // If no recent qualifications, get all qualifications
     if (!documentos || documentos.length === 0) {
-      throw new Error("Nenhuma qualificação encontrada no último mês");
+      console.log("No qualifications in last month, fetching all history...");
+      
+      const { data: allDocs } = await supabase
+        .from("documentos")
+        .select(`
+          id,
+          data_recebimento,
+          numero_nf,
+          status,
+          documento_criterios (
+            score,
+            observacao,
+            criterios (
+              codigo,
+              descricao
+            )
+          )
+        `)
+        .eq("fornecedor_id", fornecedorId)
+        .eq("status", "concluido")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      documentos = allDocs;
+      periodLabel = "histórico completo";
     }
+
+    if (!documentos || documentos.length === 0) {
+      throw new Error("Fornecedor não possui qualificações concluídas");
+    }
+
+    console.log(`Found ${documentos.length} qualifications (${periodLabel})`);
 
     // Aggregate scores by criteria
     const criteriaScores: Record<string, { descricao: string; scores: number[]; observacoes: string[] }> = {};
@@ -222,7 +255,7 @@ Formato: Texto corrido, profissional, sem markdown.`;
   <div class="content">
     <h2>Olá, ${contatos[0].nome || "Fornecedor"}!</h2>
     
-    <p>Segue o relatório de qualificação do fornecedor <strong>${fornecedor.nome}</strong> referente ao último mês.</p>
+    <p>Segue o relatório de qualificação do fornecedor <strong>${fornecedor.nome}</strong> referente ao ${periodLabel}.</p>
     
     <p><strong>Score Geral:</strong></p>
     <span class="score-badge ${(fornecedor.score_atual || 0) >= 80 ? 'score-good' : (fornecedor.score_atual || 0) >= 70 ? 'score-warning' : 'score-bad'}">

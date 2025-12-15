@@ -14,6 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { useTableSort } from "@/hooks/useTableSort";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,7 +72,9 @@ export default function Qualificacoes() {
       String(d.codigo).includes(search)
   );
 
-  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(filtered, 10);
+  const { sortedItems, sortConfig, requestSort } = useTableSort(filtered, "codigo", "asc");
+
+  const { totalItems, totalPages, getPaginatedItems, itemsPerPage } = usePagination(sortedItems, 10);
   const paginatedItems = getPaginatedItems(currentPage);
 
   // Reset to page 1 when filter changes
@@ -134,11 +138,48 @@ export default function Qualificacoes() {
         <Table>
           <TableHeader>
             <TableRow className="bg-secondary/50">
-              <TableHead className="font-semibold w-24">Código</TableHead>
-              <TableHead className="font-semibold">Data</TableHead>
-              <TableHead className="font-semibold">Fornecedor</TableHead>
-              <TableHead className="font-semibold">NF</TableHead>
-              <TableHead className="font-semibold text-center">Status</TableHead>
+              <SortableTableHead
+                sortKey="codigo"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof typeof filtered[0])}
+                className="w-24"
+              >
+                Código
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="data_recebimento"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof typeof filtered[0])}
+              >
+                Data
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="fornecedor_nome"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof typeof filtered[0])}
+              >
+                Fornecedor
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="numero_nf"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof typeof filtered[0])}
+              >
+                NF
+              </SortableTableHead>
+              <SortableTableHead
+                sortKey="status"
+                currentSortKey={sortConfig.key as string}
+                sortDirection={sortConfig.direction}
+                onSort={(key) => requestSort(key as keyof typeof filtered[0])}
+                className="text-center"
+              >
+                Status
+              </SortableTableHead>
               <TableHead className="font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>

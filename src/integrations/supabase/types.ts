@@ -144,6 +144,7 @@ export type Database = {
       }
       documentos: {
         Row: {
+          codigo: number
           created_at: string
           created_by: string | null
           data_recebimento: string
@@ -156,6 +157,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          codigo?: number
           created_at?: string
           created_by?: string | null
           data_recebimento?: string
@@ -168,6 +170,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          codigo?: number
           created_at?: string
           created_by?: string | null
           data_recebimento?: string

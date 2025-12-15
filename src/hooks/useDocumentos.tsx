@@ -65,7 +65,6 @@ export function useDocumentos() {
         .from("documentos")
         .select(`
           id,
-          codigo,
           fornecedor_id,
           data_recebimento,
           serie_nf,
@@ -77,12 +76,20 @@ export function useDocumentos() {
           created_by,
           fornecedores (nome, codigo)
         `)
-        .order("codigo", { ascending: false });
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       
-      return data.map((d) => ({
+      // Fetch codigo separately since types may not be updated yet
+      const { data: codigosData } = await supabase
+        .from("documentos")
+        .select("id, codigo") as { data: { id: string; codigo: number }[] | null; error: unknown };
+      
+      const codigosMap = new Map((codigosData || []).map(c => [c.id, c.codigo]));
+      
+      return (data || []).map((d: any) => ({
         ...d,
+        codigo: codigosMap.get(d.id) || 0,
         fornecedor_nome: d.fornecedores?.nome || "",
         fornecedor_codigo: d.fornecedores?.codigo || "",
       })) as DocumentoWithFornecedor[];

@@ -12,6 +12,7 @@ import Fornecedores from "./pages/Fornecedores";
 import Grupos from "./pages/Grupos";
 import Criterios from "./pages/Criterios";
 import Qualificacoes from "./pages/Qualificacoes";
+import QualificacaoDetalhes from "./pages/QualificacaoDetalhes";
 import Configuracoes from "./pages/Configuracoes";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/grupos" element={<Grupos />} />
               <Route path="/criterios" element={<Criterios />} />
               <Route path="/qualificacoes" element={<Qualificacoes />} />
+              <Route path="/qualificacoes/:id" element={<QualificacaoDetalhes />} />
               <Route path="/configuracoes" element={<Configuracoes />} />
             </Route>
           </Route>

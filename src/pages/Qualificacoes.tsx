@@ -43,6 +43,7 @@ export default function Qualificacoes() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [continuarOpen, setContinuarOpen] = useState(false);
@@ -51,7 +52,7 @@ export default function Qualificacoes() {
   const [documentoToDelete, setDocumentoToDelete] = useState<string | null>(null);
   const [preselectedFornecedor, setPreselectedFornecedor] = useState<string | undefined>();
 
-  // Open wizard if coming from fornecedores with ?nova=true
+  // Handle search params for filtering
   useEffect(() => {
     if (searchParams.get('nova') === 'true') {
       const fornecedorId = searchParams.get('fornecedor') || undefined;
@@ -59,18 +60,30 @@ export default function Qualificacoes() {
       setWizardOpen(true);
       setSearchParams({}, { replace: true });
     }
+    
+    // Handle status filter from URL
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
   }, [searchParams, setSearchParams]);
 
   const { documentos, isLoading, deleteDocumento, isDeleting } = useDocumentos();
 
-  const filtered = documentos.filter(
-    (d) =>
+  const filtered = documentos.filter((d) => {
+    // Text search filter
+    const matchesSearch = 
       d.fornecedor_nome.toLowerCase().includes(search.toLowerCase()) ||
       d.fornecedor_codigo.toLowerCase().includes(search.toLowerCase()) ||
       d.numero_nf?.includes(search) ||
       d.serie_nf?.includes(search) ||
-      String(d.codigo).includes(search)
-  );
+      String(d.codigo).includes(search);
+    
+    // Status filter
+    const matchesStatus = !statusFilter || d.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const { sortedItems, sortConfig, requestSort } = useTableSort(filtered, "codigo", "desc");
 
@@ -80,7 +93,12 @@ export default function Qualificacoes() {
   // Reset to page 1 when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, statusFilter]);
+
+  const clearStatusFilter = () => {
+    setStatusFilter(null);
+    setSearchParams({}, { replace: true });
+  };
 
   const handleContinuar = (documentoId: string) => {
     setSelectedDocumentoId(documentoId);
@@ -120,7 +138,7 @@ export default function Qualificacoes() {
         <div className="card-header-section">
           <h2 className="section-title">Filtros</h2>
         </div>
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4 items-center">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -130,6 +148,16 @@ export default function Qualificacoes() {
               className="pl-10"
             />
           </div>
+          {statusFilter && (
+            <Badge 
+              variant="secondary" 
+              className="cursor-pointer hover:bg-secondary/80"
+              onClick={clearStatusFilter}
+            >
+              Status: {statusFilter === "pendente" ? "Pendente" : "Concluído"}
+              <span className="ml-1 text-xs">×</span>
+            </Badge>
+          )}
         </div>
       </div>
 

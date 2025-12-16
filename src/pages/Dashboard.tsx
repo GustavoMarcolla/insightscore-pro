@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Users, FileText, TrendingUp, AlertTriangle, Clock } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { ScoreBadge } from "@/components/ui/score-badge";
@@ -6,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 export default function Dashboard() {
+  const navigate = useNavigate();
   const {
     monthlyScores,
     topSuppliers,
@@ -86,7 +88,12 @@ export default function Dashboard() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Fornecedores Ativos" value={isLoading ? "-" : stats.totalFornecedores.toString()} icon={Users} />
         <StatCard title="Fornecedores em Risco" value={isLoading ? "-" : stats.fornecedoresRisco.toString()} icon={AlertTriangle} />
-        <StatCard title="Qualificações Pendentes" value={isLoading ? "-" : stats.qualificacoesPendentes.toString()} icon={Clock} />
+        <StatCard 
+          title="Qualificações Pendentes" 
+          value={isLoading ? "-" : stats.qualificacoesPendentes.toString()} 
+          icon={Clock} 
+          onClick={() => navigate("/qualificacoes?status=pendente")}
+        />
         <StatCard title="Qualificações Concluídas do Mês" value={isLoading ? "-" : stats.qualificacoesConcluidasMes.toString()} icon={FileText} />
       </div>
 

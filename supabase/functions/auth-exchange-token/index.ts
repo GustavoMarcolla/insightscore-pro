@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 // Senior X API base URL
-const SENIOR_X_API_BASE = "https://platform.senior.com.br";
+const SENIOR_X_API_BASE = "https://cloud-leaf.senior.com.br";
 
 interface SeniorXUser {
   id: string;

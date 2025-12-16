@@ -86,15 +86,30 @@ export default function Dashboard() {
 
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Fornecedores Ativos" value={isLoading ? "-" : stats.totalFornecedores.toString()} icon={Users} />
-        <StatCard title="Fornecedores em Risco" value={isLoading ? "-" : stats.fornecedoresRisco.toString()} icon={AlertTriangle} />
+        <StatCard 
+          title="Fornecedores Ativos" 
+          value={isLoading ? "-" : stats.totalFornecedores.toString()} 
+          icon={Users} 
+          onClick={() => navigate("/fornecedores")}
+        />
+        <StatCard 
+          title="Fornecedores em Risco" 
+          value={isLoading ? "-" : stats.fornecedoresRisco.toString()} 
+          icon={AlertTriangle} 
+          onClick={() => navigate("/fornecedores?risco=true")}
+        />
         <StatCard 
           title="Qualificações Pendentes" 
           value={isLoading ? "-" : stats.qualificacoesPendentes.toString()} 
           icon={Clock} 
           onClick={() => navigate("/qualificacoes?status=pendente")}
         />
-        <StatCard title="Qualificações Concluídas do Mês" value={isLoading ? "-" : stats.qualificacoesConcluidasMes.toString()} icon={FileText} />
+        <StatCard 
+          title="Qualificações Concluídas do Mês" 
+          value={isLoading ? "-" : stats.qualificacoesConcluidasMes.toString()} 
+          icon={FileText} 
+          onClick={() => navigate("/qualificacoes?status=concluido")}
+        />
       </div>
 
       {/* Lists Grid */}

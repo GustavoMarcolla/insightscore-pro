@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus, Search, MoreHorizontal, Mail, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScoreBadge } from "@/components/ui/score-badge";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -29,11 +30,20 @@ import { TablePagination, usePagination } from "@/components/ui/table-pagination
 
 export default function Fornecedores() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState("");
+  const [riscoFilter, setRiscoFilter] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingFornecedor, setEditingFornecedor] = useState<Fornecedor | null>(null);
   const [feedbackFornecedor, setFeedbackFornecedor] = useState<Fornecedor | null>(null);
+
+  // Handle risco filter from URL
+  useEffect(() => {
+    if (searchParams.get('risco') === 'true') {
+      setRiscoFilter(true);
+    }
+  }, [searchParams]);
 
   const { 
     fornecedores, 
@@ -45,12 +55,17 @@ export default function Fornecedores() {
     isUpdating 
   } = useFornecedores();
 
-  const filtered = fornecedores.filter(
-    (f) =>
+  const filtered = fornecedores.filter((f) => {
+    const matchesSearch = 
       f.nome.toLowerCase().includes(search.toLowerCase()) ||
       f.codigo.toLowerCase().includes(search.toLowerCase()) ||
-      f.cnpj.includes(search)
-  );
+      f.cnpj.includes(search);
+    
+    // Risco filter: score < 70 and has evaluations
+    const matchesRisco = !riscoFilter || (Number(f.score_atual) < 70 && f.total_avaliacoes > 0);
+    
+    return matchesSearch && matchesRisco;
+  });
 
   const { sortedItems, sortConfig, requestSort } = useTableSort(filtered, "codigo", "asc");
 
@@ -60,7 +75,12 @@ export default function Fornecedores() {
   // Reset to page 1 when filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, riscoFilter]);
+
+  const clearRiscoFilter = () => {
+    setRiscoFilter(false);
+    setSearchParams({}, { replace: true });
+  };
 
   const handleSave = (data: { id?: string; codigo: string; nome: string; cnpj: string; endereco?: string }) => {
     if (data.id) {
@@ -101,7 +121,7 @@ export default function Fornecedores() {
         <div className="card-header-section">
           <h2 className="section-title">Filtros</h2>
         </div>
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap gap-4 items-center">
           <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -111,6 +131,16 @@ export default function Fornecedores() {
               className="pl-10"
             />
           </div>
+          {riscoFilter && (
+            <Badge 
+              variant="secondary" 
+              className="cursor-pointer hover:bg-secondary/80"
+              onClick={clearRiscoFilter}
+            >
+              Em Risco (score {"<"} 70%)
+              <span className="ml-1 text-xs">×</span>
+            </Badge>
+          )}
         </div>
       </div>
 

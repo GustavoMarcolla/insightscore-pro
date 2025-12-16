@@ -10,11 +10,19 @@ interface StatCardProps {
     isPositive: boolean;
   };
   className?: string;
+  onClick?: () => void;
 }
 
-export function StatCard({ title, value, icon: Icon, trend, className }: StatCardProps) {
+export function StatCard({ title, value, icon: Icon, trend, className, onClick }: StatCardProps) {
   return (
-    <div className={cn("card-section animate-fade-in", className)}>
+    <div 
+      className={cn(
+        "card-section animate-fade-in",
+        onClick && "cursor-pointer hover:border-primary/50 transition-colors",
+        className
+      )}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>

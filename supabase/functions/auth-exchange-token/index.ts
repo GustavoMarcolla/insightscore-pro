@@ -129,8 +129,8 @@ serve(async (req) => {
 
     console.log("Senior X user validated:", seniorUser.username);
 
-    // Normalize email
-    const email = normalizeToEmail(seniorUser.email || seniorUser.username, seniorUser.tenantDomain);
+    // Normalize email - always lowercase for case-insensitive matching
+    const email = normalizeToEmail(seniorUser.email || seniorUser.username, seniorUser.tenantDomain).toLowerCase();
     const fullName = seniorUser.fullName?.replace(/\+/g, " ") || seniorUser.username;
 
     // Create admin Supabase client
@@ -154,7 +154,8 @@ serve(async (req) => {
     }
 
     let userId: string;
-    const existingUser = existingUsers.users.find(u => u.email === email);
+    // Case-insensitive email comparison
+    const existingUser = existingUsers.users.find(u => u.email?.toLowerCase() === email);
 
     if (existingUser) {
       userId = existingUser.id;

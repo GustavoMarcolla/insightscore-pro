@@ -2,3 +2,9 @@ project_id = "ewfsmpibjomyefgomzyo"
 
 [functions.send-supplier-feedback]
 verify_jwt = true
+
+[functions.sync-seniorx-user]
+verify_jwt = false
+
+[functions.auth-exchange-token]
+verify_jwt = false

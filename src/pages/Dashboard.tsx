@@ -1,4 +1,4 @@
-import { Users, FileText, TrendingUp, AlertTriangle } from "lucide-react";
+import { Users, FileText, TrendingUp, AlertTriangle, Clock } from "lucide-react";
 import { StatCard } from "@/components/ui/stat-card";
 import { ScoreBadge } from "@/components/ui/score-badge";
 import { useDashboard } from "@/hooks/useDashboard";
@@ -85,8 +85,9 @@ export default function Dashboard() {
       {/* Stats Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="Fornecedores Ativos" value={isLoading ? "-" : stats.totalFornecedores.toString()} icon={Users} />
-        <StatCard title="Qualificações do Mês" value={isLoading ? "-" : stats.qualificacoesMes.toString()} icon={FileText} />
         <StatCard title="Fornecedores em Risco" value={isLoading ? "-" : stats.fornecedoresRisco.toString()} icon={AlertTriangle} />
+        <StatCard title="Qualificações Pendentes" value={isLoading ? "-" : stats.qualificacoesPendentes.toString()} icon={Clock} />
+        <StatCard title="Qualificações Concluídas do Mês" value={isLoading ? "-" : stats.qualificacoesConcluidasMes.toString()} icon={FileText} />
       </div>
 
       {/* Lists Grid */}

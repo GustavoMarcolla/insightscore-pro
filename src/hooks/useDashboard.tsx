@@ -22,7 +22,8 @@ interface MonthlyScore {
 
 interface DashboardStats {
   totalFornecedores: number;
-  qualificacoesMes: number;
+  qualificacoesConcluidasMes: number;
+  qualificacoesPendentes: number;
   scoreMedio: number;
   fornecedoresRisco: number;
 }
@@ -159,10 +160,18 @@ export function useDashboard() {
       startOfMonth.setDate(1);
       startOfMonth.setHours(0, 0, 0, 0);
 
-      const { count: qualificacoesMes } = await supabase
+      // Qualificações concluídas do mês
+      const { count: qualificacoesConcluidasMes } = await supabase
         .from("documentos")
         .select("*", { count: "exact", head: true })
-        .gte("created_at", startOfMonth.toISOString());
+        .gte("created_at", startOfMonth.toISOString())
+        .eq("status", "concluido");
+
+      // Total de qualificações pendentes
+      const { count: qualificacoesPendentes } = await supabase
+        .from("documentos")
+        .select("*", { count: "exact", head: true })
+        .eq("status", "pendente");
 
       // Average score
       const { data: scoreData } = await supabase
@@ -186,7 +195,8 @@ export function useDashboard() {
 
       return {
         totalFornecedores: totalFornecedores || 0,
-        qualificacoesMes: qualificacoesMes || 0,
+        qualificacoesConcluidasMes: qualificacoesConcluidasMes || 0,
+        qualificacoesPendentes: qualificacoesPendentes || 0,
         scoreMedio,
         fornecedoresRisco: fornecedoresRisco || 0,
       } as DashboardStats;
@@ -200,7 +210,8 @@ export function useDashboard() {
     lowScoreCriteria,
     stats: stats || {
       totalFornecedores: 0,
-      qualificacoesMes: 0,
+      qualificacoesConcluidasMes: 0,
+      qualificacoesPendentes: 0,
       scoreMedio: 0,
       fornecedoresRisco: 0,
     },
